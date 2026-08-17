@@ -1,269 +1,247 @@
-/* Custom CSS Variables - Modern Medical Theme (Deep Slate & Oceanic Blue/Teal) */
+/* style.css - Clean Medical EHR Dashboard Theme (Minimalist Light Mode) */
 :root {
-    --primary: hsl(210, 100%, 45%);
-    --primary-light: hsl(210, 100%, 96%);
-    --primary-medium: hsl(210, 90%, 85%);
-    --primary-dark: hsl(212, 100%, 25%);
+    --primary: hsl(196, 100%, 42%);         /* Medical Cyan/Blue */
+    --primary-light: hsl(196, 100%, 97%);
+    --primary-medium: hsl(196, 95%, 88%);
+    --primary-dark: hsl(200, 100%, 25%);
     
-    --success: hsl(150, 80%, 35%);
-    --success-light: hsl(150, 80%, 95%);
-    --warning: hsl(38, 95%, 45%);
-    --warning-light: hsl(38, 95%, 95%);
-    --danger: hsl(354, 85%, 45%);
-    --danger-light: hsl(354, 85%, 96%);
+    --success: hsl(150, 70%, 40%);
+    --success-light: hsl(150, 70%, 96%);
+    --warning: hsl(38, 95%, 50%);
+    --warning-light: hsl(38, 95%, 96%);
+    --danger: hsl(354, 80%, 50%);
+    --danger-light: hsl(354, 80%, 96%);
     
-    --slate-50: hsl(210, 40%, 98%);
-    --slate-100: hsl(210, 30%, 95%);
-    --slate-200: hsl(210, 20%, 90%);
-    --slate-300: hsl(210, 15%, 80%);
-    --slate-600: hsl(210, 15%, 40%);
-    --slate-700: hsl(210, 15%, 30%);
-    --slate-800: hsl(211, 20%, 22%);
-    --slate-900: hsl(212, 25%, 15%);
+    /* Tumor Specific Colors */
+    --color-glioma: hsl(212, 100%, 45%);
+    --color-glioma-bg: hsl(212, 100%, 96%);
+    --color-meningioma: hsl(272, 85%, 55%);
+    --color-meningioma-bg: hsl(272, 85%, 96%);
+    --color-pituitary: hsl(342, 90%, 55%);
+    --color-pituitary-bg: hsl(342, 90%, 96%);
+    --color-normal: var(--success);
+    --color-normal-bg: var(--success-light);
     
-    --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
-    --shadow-md: 0 4px 20px -4px rgba(15, 23, 42, 0.12);
-    --shadow-lg: 0 10px 30px -10px rgba(15, 23, 42, 0.16);
+    --bg-app: hsl(216, 33%, 97%);           /* Soft Clinical Gray */
+    --bg-card: hsl(0, 0%, 100%);
+    --border-color: hsl(210, 20%, 93%);
     
-    --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --text-main: hsl(220, 25%, 15%);
+    --text-muted: hsl(215, 16%, 45%);
+    --text-white: hsl(0, 0%, 100%);
+    
+    --shadow-card: 0 8px 30px rgba(15, 23, 42, 0.02), 0 2px 8px rgba(15, 23, 42, 0.01);
+    --shadow-dropdown: 0 12px 40px rgba(15, 23, 42, 0.08);
+    --shadow-hud: 0 10px 30px rgba(15, 23, 42, 0.06);
+    
+    --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Reset & Base Styles */
+/* Reset & Base Layout */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-html, body {
+body {
     font-family: var(--font-main);
-    color: var(--slate-800);
-    background-color: var(--slate-50);
-    height: 100%;
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Base App Layout */
-.app-container {
-    display: flex;
+    color: var(--text-main);
+    background-color: var(--bg-app);
     height: 100vh;
     overflow: hidden;
-}
-
-/* Sidebar Navigation Styling */
-.app-sidebar {
-    width: 280px;
-    background-color: white;
-    border-right: 1px solid var(--slate-200);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-}
-
-.brand {
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--slate-100);
-}
-
-.brand-icon {
-    width: 44px;
-    height: 44px;
-    background-color: var(--primary);
-    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 1.4rem;
-    box-shadow: 0 4px 12px rgba(0, 90, 220, 0.25);
+    -webkit-font-smoothing: antialiased;
 }
 
-.brand-text h1 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--slate-900);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-}
-
-.brand-text span {
-    font-size: 0.75rem;
-    color: var(--slate-600);
-    font-weight: 500;
-}
-
-.sidebar-nav {
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex-grow: 1;
-}
-
-.nav-item {
+.ehr-app-wrapper {
+    width: 100%;
+    height: 100vh;
+    padding: 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    color: var(--slate-700);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    justify-content: center;
 }
 
-.nav-item i {
-    font-size: 1.1rem;
-    color: var(--slate-600);
-    transition: all 0.2s ease;
-}
-
-.nav-item:hover {
-    background-color: var(--slate-100);
-    color: var(--slate-900);
-}
-
-.nav-item:hover i {
-    color: var(--primary);
-}
-
-.nav-item.active {
-    background-color: var(--primary-light);
-    color: var(--primary);
-}
-
-.nav-item.active i {
-    color: var(--primary);
-}
-
-.sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid var(--slate-100);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    background-color: var(--slate-50);
-}
-
-.status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.status-indicator .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.status-indicator.connected .dot {
-    background-color: var(--success);
-    box-shadow: 0 0 8px var(--success);
-}
-
-.status-indicator.connected .text {
-    color: var(--slate-700);
-}
-
-.model-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--slate-700);
-    background-color: white;
-    border: 1px solid var(--slate-200);
-}
-
-.model-status i {
-    color: var(--primary);
-}
-
-/* Main Area Layout */
-.app-main {
-    flex-grow: 1;
+.ehr-container {
+    width: 100%;
+    max-width: 1380px;
+    height: calc(100vh - 32px);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 32px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.03);
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
-.app-header {
-    background-color: white;
-    border-bottom: 1px solid var(--slate-200);
-    padding: 24px 32px;
+/* 1. Header Navigation Bar styling */
+.ehr-header {
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
 }
 
-.header-title h2 {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--slate-900);
-    letter-spacing: -0.02em;
-}
-
-.header-title p {
-    font-size: 0.85rem;
-    color: var(--slate-600);
-    margin-top: 4px;
-    font-weight: 500;
-}
-
-.system-stats {
+.ehr-logo-section {
     display: flex;
-    gap: 16px;
+    align-items: center;
+    gap: 8px;
 }
 
-.stat-card {
-    background-color: var(--slate-50);
-    border: 1px solid var(--slate-200);
-    padding: 8px 16px;
+.ehr-logo {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+}
+
+.ehr-logo .dot {
+    color: var(--primary);
+}
+
+.ehr-badge {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ehr-top-nav {
+    display: flex;
+    gap: 6px;
+    background-color: hsl(210, 20%, 96%);
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 9px;
+    transition: all 0.2s ease;
+}
+
+.nav-tab:hover {
+    color: var(--text-main);
+}
+
+.nav-tab.active {
+    background-color: white;
+    color: var(--text-main);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.ehr-user-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ehr-icon-button {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ehr-icon-button:hover {
+    border-color: var(--text-muted);
+    color: var(--text-main);
+}
+
+.doctor-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 4px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.doctor-profile:hover {
+    background-color: hsl(354, 80%, 99%);
+    border-color: var(--danger-light);
+}
+
+.doctor-profile:hover .dr-title {
+    color: var(--danger);
+}
+
+.doctor-avatar {
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
+    object-fit: cover;
+}
+
+.doctor-info {
     display: flex;
     flex-direction: column;
 }
 
-.stat-label {
-    font-size: 0.7rem;
-    color: var(--slate-600);
-    text-transform: uppercase;
+.dr-name {
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    color: var(--text-main);
 }
 
-.stat-value {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--slate-900);
-    margin-top: 2px;
+.dr-title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-/* Content Panel Switcher */
-.page-content {
+.logout-arrow {
+    font-size: 0.6rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.doctor-profile:hover .logout-arrow {
+    opacity: 1;
+}
+
+/* 2. Main Workspace Layout */
+.ehr-content {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 32px;
+    padding: 24px 32px;
+    background-color: hsl(220, 20%, 98%);
 }
 
-.content-section {
+.content-panel {
     display: none;
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.25s ease-in-out;
 }
 
-.content-section.active {
+.content-panel.active {
     display: block;
 }
 
@@ -272,180 +250,250 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Batch Processing Stats Banner */
-.batch-stats-banner {
+/* Summary Metrics Banner */
+.metrics-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 16px;
     background-color: white;
-    border: 1px solid var(--slate-200);
-    border-radius: 12px;
-    padding: 16px 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 16px 20px;
     margin-bottom: 24px;
-    box-shadow: var(--shadow-sm);
-    animation: fadeIn 0.3s ease-in-out;
+    box-shadow: var(--shadow-card);
 }
 
-.batch-stat-item {
+.metric-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid var(--slate-200);
+    border-right: 1px solid var(--border-color);
+    padding: 4px;
 }
 
-.batch-stat-item:last-child {
+.metric-item:last-child {
     border-right: none;
 }
 
-.batch-label {
-    font-size: 0.7rem;
+.m-label {
+    font-size: 0.65rem;
     font-weight: 700;
-    color: var(--slate-600);
+    color: var(--text-muted);
     text-transform: uppercase;
-    margin-bottom: 4px;
+    letter-spacing: 0.03em;
+    margin-bottom: 2px;
 }
 
-.batch-value {
-    font-size: 1.3rem;
+.m-val {
+    font-size: 1.15rem;
     font-weight: 800;
-    color: var(--slate-900);
+    color: var(--text-main);
 }
 
-.batch-value.glioma { color: hsl(200, 85%, 45%); }
-.batch-value.meningioma { color: hsl(280, 75%, 50%); }
-.batch-value.pituitary { color: hsl(340, 80%, 50%); }
-.batch-value.normal { color: var(--success); }
+.m-val.glioma { color: var(--color-glioma); }
+.m-val.meningioma { color: var(--color-meningioma); }
+.m-val.pituitary { color: var(--color-pituitary); }
+.m-val.normal { color: var(--success); }
 
-/* Grid Layout for Analyzer */
-.grid-layout {
+/* Workspace Grid (Anatomy Left, Diagnostic Right) */
+.workspace-grid {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: 1.1fr 1.2fr;
     gap: 24px;
     align-items: start;
 }
 
-/* Cards Design */
-.card {
+/* General EHR Card styles */
+.anatomy-card, .console-card, .records-card {
     background-color: white;
-    border: 1px solid var(--slate-200);
-    border-radius: 12px;
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: var(--shadow-card);
+    padding: 24px;
 }
 
-.card-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--slate-100);
-}
-
-.card-header h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--slate-900);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.card-header h3 i {
+.card-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
     color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 4px;
 }
 
-.card-header p {
-    font-size: 0.8rem;
-    color: var(--slate-600);
-    margin-top: 4px;
-    line-height: 1.4;
+.anatomy-card h2, .console-card h2, .records-card h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
 }
 
-/* Upload Zone styling */
-.upload-zone {
-    margin: 24px 24px 16px;
-    border: 2px dashed var(--slate-300);
-    border-radius: 10px;
-    background-color: var(--slate-50);
-    cursor: pointer;
-    min-height: 140px;
+/* Anatomy Scene with Floating Brain & Hologram HUD */
+.brain-viewer-scene {
+    height: 320px;
+    background: radial-gradient(circle, hsl(210, 100%, 98%) 0%, hsl(220, 20%, 99%) 90%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    margin: 20px 0;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
+}
+
+.floating-3d-brain {
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+    animation: float-brain 6s ease-in-out infinite;
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.05));
+}
+
+@keyframes float-brain {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
+}
+
+/* Glassmorphic HUD Badges (mimics eyebox details in screenshot) */
+.hud-badge {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-hud);
+    z-index: 10;
+    animation: float-hud 6s ease-in-out infinite;
+}
+
+.hud-top-left {
+    top: 20px;
+    left: 20px;
+    animation-delay: 0.5s;
+}
+
+.hud-bottom-right {
+    bottom: 20px;
+    right: 20px;
+    animation-delay: 1.5s;
+}
+
+@keyframes float-hud {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.hud-badge i {
+    font-size: 1.1rem;
+    color: var(--primary);
+}
+
+.hud-title {
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.hud-value {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-top: 1px;
+}
+
+.hud-prediction-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--primary);
+}
+
+.hud-badge.glioma .hud-prediction-color { background-color: var(--color-glioma); }
+.hud-badge.meningioma .hud-prediction-color { background-color: var(--color-meningioma); }
+.hud-badge.pituitary .hud-prediction-color { background-color: var(--color-pituitary); }
+.hud-badge.notumor .hud-prediction-color { background-color: var(--success); }
+
+/* EHR Upload & Queue interfaces */
+.ehr-upload-wrapper {
+    margin-top: 20px;
+}
+
+.ehr-drop-zone {
+    border: 2px dashed hsl(210, 25%, 88%);
+    border-radius: 14px;
+    background-color: hsl(210, 25%, 98%);
+    padding: 20px;
+    cursor: pointer;
+    text-align: center;
     transition: all 0.2s ease;
 }
 
-.upload-zone:hover, .upload-zone.dragover {
+.ehr-drop-zone:hover, .ehr-drop-zone.dragover {
     border-color: var(--primary);
     background-color: var(--primary-light);
 }
 
-.upload-prompt {
-    padding: 20px;
-    text-align: center;
+.ehr-upload-prompt {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 8px;
 }
 
-.upload-icon {
-    font-size: 1.8rem;
-    color: var(--slate-600);
-    margin-bottom: 8px;
+.cloud-icon {
+    font-size: 1.6rem;
+    color: var(--text-muted);
     transition: transform 0.2s ease;
 }
 
-.upload-zone:hover .upload-icon {
+.ehr-drop-zone:hover .cloud-icon {
     color: var(--primary);
     transform: translateY(-2px);
 }
 
-.main-prompt {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--slate-900);
+.ehr-upload-prompt p {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-main);
 }
 
-.sub-prompt {
-    font-size: 0.75rem;
-    color: var(--slate-600);
-    margin-top: 2px;
-}
-
-.browse-btn {
+.browse-link {
     color: var(--primary);
     font-weight: 700;
     text-decoration: underline;
 }
 
-.file-limits {
-    font-size: 0.65rem;
-    color: var(--slate-600);
-    margin-top: 8px;
-}
-
-/* Batch Queue container styles */
-.batch-queue-container {
-    margin: 0 24px 16px;
-    border: 1px solid var(--slate-200);
-    border-radius: 8px;
+/* Queue Styles */
+.ehr-queue-container {
+    margin-top: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     overflow: hidden;
 }
 
-.queue-header {
-    background-color: var(--slate-50);
+.ehr-queue-header {
+    background-color: hsl(210, 25%, 98%);
     padding: 10px 14px;
-    border-bottom: 1px solid var(--slate-200);
+    font-size: 0.75rem;
+    font-weight: 700;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.queue-header h4 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--slate-900);
-}
-
-.clear-queue-btn {
+.queue-clear-btn {
     background: none;
     border: none;
     color: var(--danger);
@@ -457,14 +505,9 @@ html, body {
     gap: 4px;
 }
 
-.clear-queue-btn:hover {
-    text-decoration: underline;
-}
-
-.queue-list {
-    max-height: 250px;
+.ehr-queue-list {
+    max-height: 180px;
     overflow-y: auto;
-    background-color: white;
 }
 
 .queue-item {
@@ -472,7 +515,7 @@ html, body {
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    border-bottom: 1px solid var(--slate-100);
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -482,7 +525,7 @@ html, body {
 }
 
 .queue-item:hover {
-    background-color: var(--slate-50);
+    background-color: hsl(210, 20%, 99%);
 }
 
 .queue-item.active {
@@ -494,13 +537,13 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    width: 65%;
+    width: 60%;
 }
 
 .queue-item-name {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--slate-800);
+    color: var(--text-main);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -509,13 +552,9 @@ html, body {
 .queue-item-status {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--slate-600);
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    color: var(--text-muted);
 }
 
-.queue-item-status.pending { color: var(--slate-600); }
 .queue-item-status.analyzing { color: var(--primary); }
 .queue-item-status.completed { color: var(--success); }
 .queue-item-status.failed { color: var(--danger); }
@@ -528,192 +567,192 @@ html, body {
     text-transform: uppercase;
 }
 
-.queue-item-badge.glioma { background-color: hsl(200, 85%, 93%); color: hsl(200, 90%, 35%); }
-.queue-item-badge.meningioma { background-color: hsl(280, 75%, 93%); color: hsl(280, 80%, 40%); }
-.queue-item-badge.pituitary { background-color: hsl(340, 80%, 93%); color: hsl(340, 85%, 40%); }
-.queue-item-badge.notumor { background-color: var(--success-light); color: var(--success); }
+.queue-item-badge.glioma { background-color: var(--color-glioma-bg); color: var(--color-glioma); }
+.queue-item-badge.meningioma { background-color: var(--color-meningioma-bg); color: var(--color-meningioma); }
+.queue-item-badge.pituitary { background-color: var(--color-pituitary-bg); color: var(--color-pituitary); }
+.queue-item-badge.notumor { background-color: var(--color-normal-bg); color: var(--color-normal); }
 
 .queue-item-remove {
     background: none;
     border: none;
-    color: var(--slate-600);
+    color: var(--text-muted);
     cursor: pointer;
     padding: 4px;
-    font-size: 0.8rem;
 }
 
 .queue-item-remove:hover {
     color: var(--danger);
 }
 
-.action-bar {
-    padding: 0 24px 24px;
-}
-
-/* Sample Grid */
-.sample-scans {
-    padding: 0 24px 24px;
-    border-top: 1px solid var(--slate-100);
-}
-
-.sample-scans h4 {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--slate-900);
-    margin: 16px 0 10px;
-}
-
-.sample-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-}
-
-.sample-item {
-    background-color: var(--slate-50);
-    border: 1px solid var(--slate-200);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--slate-700);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.sample-item:hover {
-    border-color: var(--primary);
-    background-color: var(--primary-light);
-    color: var(--primary);
-}
-
-.sample-item.active {
-    border-color: var(--primary);
-    background-color: var(--primary-light);
-    color: var(--primary);
-    box-shadow: 0 0 0 1px var(--primary);
-}
-
-.sample-thumb-icon {
-    font-size: 0.85rem;
-    color: var(--slate-600);
-}
-
-.sample-item:hover .sample-thumb-icon, .sample-item.active .sample-thumb-icon {
-    color: var(--primary);
-}
-
-.sample-note {
-    font-size: 0.65rem;
-    color: var(--slate-600);
-    margin-top: 8px;
-    font-style: italic;
-    text-align: center;
-}
-
 /* Button UI */
-.btn {
+.ehr-action-bar {
+    margin-top: 16px;
+}
+
+.ehr-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
-    font-size: 0.85rem;
+    padding: 12px 24px;
+    font-family: var(--font-main);
+    font-size: 0.8rem;
     font-weight: 700;
-    border-radius: 8px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.btn-block {
+.ehr-btn-block {
     display: flex;
     width: 100%;
 }
 
-.btn-primary {
+.ehr-btn-primary {
     background-color: var(--primary);
     color: white;
-    box-shadow: 0 4px 12px rgba(0, 90, 220, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 200, 255, 0.12);
+    width: 100%;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background-color: hsl(210, 100%, 38%);
-    transform: translateY(-1px);
+.ehr-btn-primary:hover:not(:disabled) {
+    background-color: hsl(196, 100%, 36%);
+    box-shadow: 0 6px 20px rgba(0, 200, 255, 0.2);
 }
 
-.btn-primary:disabled {
-    background-color: var(--slate-300);
-    color: var(--slate-600);
+.ehr-btn-primary:disabled {
+    background-color: hsl(210, 15%, 90%);
+    color: var(--text-muted);
     cursor: not-allowed;
     box-shadow: none;
 }
 
-.btn-secondary {
+.ehr-btn-secondary {
     background-color: white;
-    color: var(--slate-800);
-    border: 1px solid var(--slate-300);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
 }
 
-.btn-secondary:hover {
-    background-color: var(--slate-50);
+.ehr-btn-secondary:hover {
+    background-color: hsl(210, 25%, 98%);
+    border-color: var(--text-muted);
 }
 
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 0.75rem;
+/* Console Side (Right Column) styling */
+.console-card {
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Results panel empty and loading states */
-.results-empty, .results-loading {
+.console-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+}
+
+.console-empty, .console-loading {
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 60px 40px;
-    min-height: 450px;
+    padding: 40px 20px;
 }
 
-.empty-animation {
-    width: 70px;
-    height: 70px;
-    background-color: var(--slate-100);
+.stethoscope-anim {
+    width: 64px;
+    height: 64px;
+    background-color: var(--primary-light);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--slate-600);
-    font-size: 2rem;
-    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(0, 200, 255, 0.06);
 }
 
-.results-empty p, .results-loading p {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--slate-900);
+.console-empty p, .console-loading p {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-main);
 }
 
-.results-empty span, .results-loading span {
-    font-size: 0.85rem;
-    color: var(--slate-600);
-    margin-top: 6px;
+.console-empty span, .console-loading span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
     line-height: 1.4;
     max-width: 320px;
 }
 
-/* Spinner styling */
-.spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--primary-light);
-    border-top: 4px solid var(--primary);
+/* Preset Picker (Eyeball screenshot style) */
+.preset-selector {
+    margin-top: 32px;
+    width: 100%;
+}
+
+.preset-selector h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+}
+
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.preset-item {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-item:hover, .preset-item.active {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 200, 255, 0.04);
+}
+
+.dot-indicator {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
+}
+
+.dot-indicator.glioma { background-color: var(--color-glioma); }
+.dot-indicator.meningioma { background-color: var(--color-meningioma); }
+.dot-indicator.pituitary { background-color: var(--color-pituitary); }
+.dot-indicator.normal { background-color: var(--success); }
+
+/* Loader anim */
+.ehr-loader {
+    width: 42px;
+    height: 42px;
+    border: 3px solid var(--primary-light);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -721,125 +760,119 @@ html, body {
     100% { transform: rotate(360deg); }
 }
 
-/* Results Display Area styling */
-.results-content {
-    padding: 24px;
-    animation: fadeIn 0.3s ease-in-out;
+/* Result panel active */
+.console-results {
+    animation: fadeIn 0.3s ease;
 }
 
 .warning-banner {
     background-color: var(--warning-light);
     border: 1px solid var(--warning);
-    border-radius: 8px;
-    padding: 10px 16px;
+    border-radius: 10px;
+    padding: 8px 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    font-size: 0.8rem;
+    gap: 8px;
+    font-size: 0.75rem;
     color: var(--warning);
     font-weight: 600;
-}
-
-.warning-banner i {
-    font-size: 0.95rem;
-}
-
-.active-file-header {
-    background-color: var(--slate-50);
-    border: 1px solid var(--slate-200);
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.8rem;
     margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
-.active-file-label {
-    font-weight: 700;
-    color: var(--slate-600);
-}
-
-.active-file-name {
-    font-family: monospace;
-    font-weight: 600;
-    color: var(--slate-900);
-}
-
-.primary-result {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--primary-light);
-    padding: 16px 24px;
+.inspecting-banner {
+    background-color: hsl(210, 20%, 97%);
     border-radius: 10px;
-    border: 1px solid var(--primary-medium);
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
 }
 
-.result-badge {
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: var(--primary-dark);
-    letter-spacing: 0.05em;
+.inspecting-banner .label {
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.inspecting-banner .value {
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.metric-pill {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-pill .m-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
     text-transform: uppercase;
 }
 
-.result-confidence {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.result-confidence .label {
-    font-size: 0.7rem;
-    color: var(--slate-600);
-    font-weight: 600;
-}
-
-.result-confidence .value {
-    font-size: 1.3rem;
+.metric-pill .m-value {
+    font-size: 1.15rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--text-main);
+    margin-top: 4px;
 }
 
-/* Probabilities Progress Bars */
-.probability-section {
-    margin-top: 24px;
+.metric-pill .m-value.GLIOMA { color: var(--color-glioma); }
+.metric-pill .m-value.MENINGIOMA { color: var(--color-meningioma); }
+.metric-pill .m-value.PITUITARY { color: var(--color-pituitary); }
+
+/* Probability Lists */
+.prob-section {
+    margin-bottom: 24px;
 }
 
-.probability-section h4 {
-    font-size: 0.85rem;
+.prob-section h4 {
+    font-size: 0.75rem;
     font-weight: 700;
-    color: var(--slate-900);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     margin-bottom: 12px;
 }
 
-.prob-list {
+.prob-chart-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .prob-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .prob-name {
-    text-transform: capitalize;
-    color: var(--slate-700);
     width: 90px;
+    color: var(--text-main);
 }
 
 .prob-bar-container {
     flex-grow: 1;
     height: 8px;
-    background-color: var(--slate-100);
+    background-color: hsl(210, 20%, 95%);
     border-radius: 4px;
     overflow: hidden;
     margin: 0 16px;
@@ -847,228 +880,268 @@ html, body {
 
 .prob-bar {
     height: 100%;
-    background-color: var(--primary);
     border-radius: 4px;
     width: 0;
-    transition: width 0.6s cubic-bezier(0.1, 0.8, 0.3, 1);
+    background-color: var(--primary);
+    transition: width 0.8s cubic-bezier(0.1, 0.8, 0.3, 1);
 }
 
 .prob-val {
-    width: 45px;
+    width: 40px;
     text-align: right;
-    color: var(--slate-900);
+    color: var(--text-main);
 }
 
-/* Compare Viewer UI */
-.visualizer-section {
-    margin-top: 28px;
-}
-
-.visualizer-section h4 {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--slate-900);
-}
-
-.xai-desc {
+/* Compare View Grid (Raw MRI vs heatmap) */
+.compare-visualizer h4 {
     font-size: 0.75rem;
-    color: var(--slate-600);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.xai-subtext {
+    font-size: 0.7rem;
+    color: var(--text-muted);
     margin-top: 4px;
     line-height: 1.4;
 }
 
-.viewer-compare {
+.compare-view-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    margin-top: 16px;
+    margin-top: 12px;
 }
 
-.viewer-pane {
-    background-color: var(--slate-900);
-    border-radius: 8px;
+.compare-view-pane {
+    background-color: hsl(220, 25%, 10%);
+    border-radius: 12px;
     padding: 8px;
-    text-align: center;
     position: relative;
-    border: 1px solid var(--slate-700);
+    border: 1px solid hsl(220, 20%, 20%);
+    overflow: hidden;
 }
 
-.pane-label {
+.pane-tag {
     position: absolute;
-    top: 14px;
-    left: 14px;
+    top: 12px;
+    left: 12px;
     background-color: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(4px);
     color: white;
-    font-size: 0.65rem;
-    padding: 4px 8px;
-    border-radius: 4px;
+    font-size: 0.6rem;
     font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
     z-index: 10;
 }
 
-.viewer-pane img {
-    max-width: 100%;
-    height: 250px;
+.compare-view-pane img {
+    width: 100%;
+    height: 200px;
     object-fit: contain;
     border-radius: 6px;
     display: block;
-    margin: 0 auto;
 }
 
-/* Findings Card */
-.findings-card {
-    background-color: var(--slate-50);
+/* Findings narrative statement */
+.findings-box {
+    background-color: hsl(210, 20%, 97%);
     border-left: 4px solid var(--primary);
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 12px 12px 0;
     padding: 16px 20px;
-    margin-top: 24px;
+    margin-top: 20px;
     font-size: 0.8rem;
     line-height: 1.5;
 }
 
-.findings-card h5 {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--slate-900);
-    margin-bottom: 6px;
+.findings-box h5 {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 4px;
 }
 
-.findings-card p {
-    color: var(--slate-700);
+.findings-box p {
+    color: var(--text-muted);
 }
 
-/* Table styling for History list */
-.history-table {
+/* EHR Table Layout for history log */
+.records-table-container {
+    margin-top: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.records-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
-.history-table th {
+.records-table th {
+    background-color: hsl(210, 20%, 97%);
     padding: 14px 20px;
-    background-color: var(--slate-50);
-    border-bottom: 1px solid var(--slate-200);
-    text-align: left;
-    color: var(--slate-700);
     font-weight: 700;
+    color: var(--text-muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.history-table td {
+.records-table td {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--slate-100);
-    color: var(--slate-800);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    background-color: white;
 }
 
-.history-table tr:last-child td {
+.records-table tr:last-child td {
     border-bottom: none;
 }
 
-.no-history-text {
+.no-records {
     text-align: center;
-    color: var(--slate-600);
+    color: var(--text-muted);
     padding: 40px 0 !important;
 }
 
 .history-class {
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
 }
-
-.history-class.glioma { color: hsl(200, 90%, 35%); }
-.history-class.meningioma { color: hsl(280, 80%, 45%); }
-.history-class.pituitary { color: hsl(340, 85%, 45%); }
+.history-class.glioma { color: var(--color-glioma); }
+.history-class.meningioma { color: var(--color-meningioma); }
+.history-class.pituitary { color: var(--color-pituitary); }
 .history-class.notumor { color: var(--success); }
 
-/* Encyclopedia Panels */
-.encyclopedia-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+/* Timeline/Care Plan Encyclopedia layout (Horizontal scroll) */
+.encyclopedia-timeline-wrapper {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 20px 0;
+    margin-top: 10px;
 }
 
-.info-card {
-    height: 100%;
+.timeline-card {
+    flex-shrink: 0;
+    width: 330px;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease;
 }
 
-.info-header {
-    padding: 16px 24px;
+.timeline-card:hover {
+    transform: translateY(-4px);
+}
+
+.timeline-card.glioma-border { border-top: 4px solid var(--color-glioma); }
+.timeline-card.meningioma-border { border-top: 4px solid var(--color-meningioma); }
+.timeline-card.pituitary-border { border-top: 4px solid var(--color-pituitary); }
+.timeline-card.normal-border { border-top: 4px solid var(--success); }
+
+.t-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 12px;
+}
+
+.t-badge.glioma-bg { background-color: var(--color-glioma); }
+.t-badge.meningioma-bg { background-color: var(--color-meningioma); }
+.t-badge.pituitary-bg { background-color: var(--color-pituitary); }
+.t-badge.normal-bg { background-color: var(--success); }
+
+.timeline-card h3 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.t-meta {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 2px;
+    margin-bottom: 12px;
+}
+
+.timeline-card p {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.timeline-card h4 {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+}
+
+.timeline-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.timeline-checklist li {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-main);
     display: flex;
     align-items: center;
-    gap: 12px;
-    color: white;
+    gap: 8px;
 }
 
-.info-header h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-}
-
-.info-header i {
-    font-size: 1.2rem;
-}
-
-.glioma-theme { background-color: hsl(200, 85%, 45%); }
-.meningioma-theme { background-color: hsl(280, 75%, 50%); }
-.pituitary-theme { background-color: hsl(340, 80%, 50%); }
-.normal-theme { background-color: var(--success); }
-
-.info-body {
-    padding: 24px;
-}
-
-.info-body h4 {
+.timeline-checklist li i {
     font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--slate-700);
-    margin-top: 14px;
-    letter-spacing: 0.05em;
 }
 
-.info-body h4:first-child {
-    margin-top: 0;
+/* Custom Scrollbar for EHR layout */
+.ehr-content::-webkit-scrollbar, .ehr-queue-list::-webkit-scrollbar, .encyclopedia-timeline-wrapper::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
 }
 
-.info-body p {
-    font-size: 0.85rem;
-    line-height: 1.5;
-    color: var(--slate-600);
-    margin-top: 6px;
+.ehr-content::-webkit-scrollbar-track, .ehr-queue-list::-webkit-scrollbar-track, .encyclopedia-timeline-wrapper::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-/* Responsiveness adjustments */
-@media (max-width: 1100px) {
-    .grid-layout {
+.ehr-content::-webkit-scrollbar-thumb, .ehr-queue-list::-webkit-scrollbar-thumb, .encyclopedia-timeline-wrapper::-webkit-scrollbar-thumb {
+    background: hsl(210, 15%, 88%);
+    border-radius: 10px;
+}
+
+.ehr-content::-webkit-scrollbar-thumb:hover, .ehr-queue-list::-webkit-scrollbar-thumb:hover, .encyclopedia-timeline-wrapper::-webkit-scrollbar-thumb:hover {
+    background: hsl(210, 15%, 75%);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1000px) {
+    .workspace-grid {
         grid-template-columns: 1fr;
     }
-    .upload-card {
-        max-width: 100%;
+    .ehr-header {
+        padding: 12px 16px;
     }
-}
-
-@media (max-width: 800px) {
-    .app-container {
-        flex-direction: column;
-    }
-    .app-sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--slate-200);
-    }
-    .sidebar-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding: 12px;
-    }
-    .sidebar-footer {
-        display: none;
-    }
-    .encyclopedia-grid {
-        grid-template-columns: 1fr;
-    }
-    .viewer-compare {
-        grid-template-columns: 1fr;
+    .ehr-content {
+        padding: 16px;
     }
 }

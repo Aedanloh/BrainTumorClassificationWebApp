@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Tumor Classification & Explainable AI (Grad-CAM) System</title>
+    <title>NeuroClassify - EHR Brain Tumor Diagnostics Platform</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,345 +14,342 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="app-sidebar">
-            <div class="brand">
-                <div class="brand-icon"><i class="fa-solid fa-brain"></i></div>
-                <div class="brand-text">
-                    <h1>NeuroClassify</h1>
-                    <span>MRI Diagnostics System</span>
-                </div>
-            </div>
+    <div class="ehr-app-wrapper">
+        <div class="ehr-container">
             
-            <nav class="sidebar-nav">
-                <a href="#analyzer" class="nav-item active" id="nav-analyzer">
-                    <i class="fa-solid fa-magnifying-glass-chart"></i>
-                    <span>MRI Analyzer</span>
-                </a>
-                <a href="#history" class="nav-item" id="nav-history">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>Scan History</span>
-                </a>
-                <a href="#education" class="nav-item" id="nav-education">
-                    <i class="fa-solid fa-book-medical"></i>
-                    <span>Tumor Encyclopedia</span>
-                </a>
-                <a href="#" class="nav-item" id="nav-logout" style="margin-top: auto; color: var(--danger);">
-                    <i class="fa-solid fa-right-from-bracket" style="color: var(--danger);"></i>
-                    <span>Doctor Logout</span>
-                </a>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <div class="status-indicator connected">
-                    <span class="dot"></span>
-                    <span class="text">Server Connected</span>
+            <!-- 1. Top Navigation Bar (EHR Mockup Style) -->
+            <header class="ehr-header">
+                <div class="ehr-logo-section">
+                    <span class="ehr-logo">NeuroClassify<span class="dot">.</span></span>
+                    <span class="ehr-badge">Ehr Support</span>
                 </div>
-                <div class="model-status" id="model-status-badge">
-                    <i class="fa-solid fa-microchip"></i>
-                    <span id="model-status-text">Checking model...</span>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="app-main">
-            <!-- Header -->
-            <header class="app-header">
-                <div class="header-title">
-                    <h2>Brain Tumor Classification Platform</h2>
-                    <p>Deep Learning in Medical Imaging — Final Year Project Study</p>
-                </div>
-                <div class="system-stats">
-                    <div class="stat-card">
-                        <span class="stat-label">Model Architecture</span>
-                        <span class="stat-value">ResNet-18 + Grad-CAM</span>
+                
+                <nav class="ehr-top-nav">
+                    <a href="#analyzer" class="nav-tab active" id="tab-analyzer"><i class="fa-solid fa-magnifying-glass-chart"></i> Diagnostics</a>
+                    <a href="#history" class="nav-tab" id="tab-history"><i class="fa-solid fa-clock-rotate-left"></i> Patient Records</a>
+                    <a href="#education" class="nav-tab" id="tab-education"><i class="fa-solid fa-book-medical"></i> Encyclopedia</a>
+                </nav>
+                
+                <div class="ehr-user-section">
+                    <div class="ehr-icon-button"><i class="fa-regular fa-bell"></i></div>
+                    <div class="ehr-icon-button"><i class="fa-regular fa-calendar"></i></div>
+                    <div class="doctor-profile" id="nav-logout" title="Click to Logout">
+                        <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=100" alt="Doctor Profile" class="doctor-avatar">
+                        <div class="doctor-info">
+                            <span class="dr-name" id="doctor-display-name">Dr. Jane Doe</span>
+                            <span class="dr-title">Neuro-Radiologist <i class="fa-solid fa-right-from-bracket logout-arrow"></i></span>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Page Sections -->
-            <div class="page-content">
+            <!-- 2. Primary Page Workspace -->
+            <main class="ehr-content">
                 
-                <!-- SECTION 1: MRI Analyzer -->
-                <section id="analyzer-section" class="content-section active">
-                    <!-- Batch Processing Stats Banner (Only visible when batch mode is active) -->
-                    <div class="batch-stats-banner" id="batch-stats-banner" style="display: none;">
-                        <div class="batch-stat-item">
-                            <span class="batch-label">Total Selected</span>
-                            <span class="batch-value" id="batch-total-cnt">0</span>
+                <!-- SECTION 1: Diagnostics Workstation -->
+                <div id="analyzer-section" class="content-panel active">
+                    
+                    <!-- Top Summary Stats Grid (EHR Mockup style metrics) -->
+                    <section class="metrics-grid" id="batch-stats-banner" style="display: none;">
+                        <div class="metric-item">
+                            <span class="m-label">Selected Scans</span>
+                            <span class="m-val" id="batch-total-cnt">0</span>
                         </div>
-                        <div class="batch-stat-item">
-                            <span class="batch-label">Processed</span>
-                            <span class="batch-value" id="batch-processed-cnt">0</span>
+                        <div class="metric-item">
+                            <span class="m-label">Completed</span>
+                            <span class="m-val" id="batch-processed-cnt">0</span>
                         </div>
-                        <div class="batch-stat-item">
-                            <span class="batch-label">Glioma</span>
-                            <span class="batch-value glioma" id="batch-glioma-cnt">0</span>
+                        <div class="metric-item border-glioma">
+                            <span class="m-label">Glioma Detected</span>
+                            <span class="m-val glioma" id="batch-glioma-cnt">0</span>
                         </div>
-                        <div class="batch-stat-item">
-                            <span class="batch-label">Meningioma</span>
-                            <span class="batch-value meningioma" id="batch-meningioma-cnt">0</span>
+                        <div class="metric-item border-meningioma">
+                            <span class="m-label">Meningioma Detected</span>
+                            <span class="m-val meningioma" id="batch-meningioma-cnt">0</span>
                         </div>
-                        <div class="batch-stat-item">
-                            <span class="batch-label">Pituitary</span>
-                            <span class="batch-value pituitary" id="batch-pituitary-cnt">0</span>
+                        <div class="metric-item border-pituitary">
+                            <span class="m-label">Pituitary Detected</span>
+                            <span class="m-val pituitary" id="batch-pituitary-cnt">0</span>
                         </div>
-                        <div class="batch-stat-item">
-                            <span class="batch-label">No Tumor</span>
-                            <span class="batch-value normal" id="batch-notumor-cnt">0</span>
+                        <div class="metric-item border-normal">
+                            <span class="m-label">Healthy Scans</span>
+                            <span class="m-val normal" id="batch-notumor-cnt">0</span>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="grid-layout">
-                        <!-- Left Panel: Upload Image & Batch Queue -->
-                        <div class="card upload-card">
-                            <div class="card-header">
-                                <h3><i class="fa-solid fa-upload"></i> Upload MRI Scans</h3>
-                                <p>Select or drag one or more T1-weighted contrast-enhanced brain MRI scans.</p>
-                            </div>
-                            
-                            <!-- Drag & Drop Upload Zone (Multiple files allowed) -->
-                            <div class="upload-zone" id="drop-zone">
-                                <input type="file" id="file-input" accept="image/jpeg, image/png" multiple style="display: none;">
-                                <div class="upload-prompt" id="upload-prompt">
-                                    <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-                                    <p class="main-prompt">Drag & drop MRI scans here</p>
-                                    <p class="sub-prompt">or <span class="browse-btn">browse files</span></p>
-                                    <span class="file-limits">Supported formats: JPG, JPEG, PNG (Select multiple)</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Batch Queue List (Visible when files are added) -->
-                            <div class="batch-queue-container" id="batch-queue-container" style="display: none;">
-                                <div class="queue-header">
-                                    <h4>Scans Queue (<span id="queue-count">0</span> files)</h4>
-                                    <button class="clear-queue-btn" id="clear-queue-btn"><i class="fa-solid fa-trash-can"></i> Clear</button>
-                                </div>
-                                <div class="queue-list" id="queue-list">
-                                    <!-- Dynamic rows go here -->
-                                </div>
-                            </div>
-                            
-                            <!-- Actions -->
-                            <div class="action-bar" style="display: flex; flex-direction: column; gap: 10px;">
-                                <button class="btn btn-primary btn-block" id="analyze-btn" disabled>
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Run Batch DL Analysis
-                                </button>
-                                <div id="batch-control-actions" style="display: none; gap: 10px; width: 100%;">
-                                    <button class="btn btn-secondary" id="pause-btn" style="flex: 1;">
-                                        <i class="fa-solid fa-pause"></i> Pause
-                                    </button>
-                                    <button class="btn btn-secondary" id="cancel-btn" style="flex: 1; border-color: var(--danger); color: var(--danger);">
-                                        <i class="fa-solid fa-ban"></i> Cancel
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- Sample Scans Section -->
-                            <div class="sample-scans">
-                                <h4>Or test with sample scans (select one or multiple):</h4>
-                                <div class="sample-grid">
-                                    <div class="sample-item" data-type="glioma" data-file="dataset/Testing/glioma/Te-gl_10.jpg">
-                                        <i class="fa-solid fa-brain sample-thumb-icon"></i>
-                                        <span>Sample Glioma</span>
-                                    </div>
-                                    <div class="sample-item" data-type="meningioma" data-file="dataset/Testing/meningioma/Te-me_10.jpg">
-                                        <i class="fa-solid fa-brain sample-thumb-icon"></i>
-                                        <span>Sample Meningioma</span>
-                                    </div>
-                                    <div class="sample-item" data-type="notumor" data-file="dataset/Testing/notumor/Te-no_10.jpg">
-                                        <i class="fa-solid fa-brain sample-thumb-icon"></i>
-                                        <span>Sample Normal</span>
-                                    </div>
-                                    <div class="sample-item" data-type="pituitary" data-file="dataset/Testing/pituitary/Te-pi_10.jpg">
-                                        <i class="fa-solid fa-brain sample-thumb-icon"></i>
-                                        <span>Sample Pituitary</span>
-                                    </div>
-                                </div>
-                                <p class="sample-note">*Requires dataset directories to exist locally.</p>
-                            </div>
-                        </div>
-
-                        <!-- Right Panel: Diagnostics & Visualizations -->
-                        <div class="card results-card">
-                            <div class="card-header">
-                                <h3><i class="fa-solid fa-chart-pie"></i> Diagnostic Output</h3>
-                                <p>Select an analyzed file from the queue on the left to display its detailed prediction and explainability heatmap.</p>
-                            </div>
-                            
-                            <!-- Empty State -->
-                            <div class="results-empty" id="results-empty">
-                                <div class="empty-animation">
-                                    <i class="fa-solid fa-stethoscope"></i>
-                                </div>
-                                <p>Awaiting MRI Scans Upload...</p>
-                                <span>Please upload MRI scans or select sample scans on the left, then click "Run Batch DL Analysis".</span>
-                            </div>
-                            
-                            <!-- Loading State -->
-                            <div class="results-loading" id="results-loading" style="display: none;">
-                                <div class="spinner"></div>
-                                <p id="loading-title">Running Deep CNN Inference...</p>
-                                <span id="loading-subtitle">Analyzing image layers & extracting Grad-CAM gradients...</span>
-                            </div>
-
-                            <!-- Results Content (Hidden by Default) -->
-                            <div class="results-content" id="results-content" style="display: none;">
-                                <!-- Warning banner if model is not trained yet -->
-                                <div class="warning-banner" id="model-warning-banner" style="display: none;">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                    <span id="warning-text">Model weights not trained. Running on untrained/ImageNet base model.</span>
-                                </div>
-
-                                <div class="active-file-header">
-                                    <span class="active-file-label">Inspecting:</span>
-                                    <span class="active-file-name" id="inspected-file-name">filename.jpg</span>
-                                </div>
-
-                                <div class="primary-result">
-                                    <div class="result-badge" id="prediction-class-badge">GLIOMA</div>
-                                    <div class="result-confidence">
-                                        <span class="label">Confidence Score:</span>
-                                        <span class="value" id="prediction-confidence-val">94.8%</span>
-                                    </div>
-                                </div>
-
-                                <!-- Probability Bars -->
-                                <div class="probability-section">
-                                    <h4>Probability Distribution</h4>
-                                    <div class="prob-list" id="prob-list">
-                                        <!-- Will be dynamically populated -->
-                                    </div>
-                                </div>
-
-                                <!-- Compare Viewer (Raw vs Heatmap) -->
-                                <div class="visualizer-section">
-                                    <h4>Explainable AI (XAI) — Grad-CAM Heatmap</h4>
-                                    <p class="xai-desc">The heatmap highlights the regions in the MRI scan that contributed most strongly to the model's classification decision (red regions = highest activation).</p>
+                    <!-- Main Split Layout: Anatomical Brain View vs Visualizer Console -->
+                    <div class="workspace-grid">
+                        
+                        <!-- COLUMN A: 3D Anatomical Brain Model View & Upload Controls -->
+                        <div class="workspace-col-left">
+                            <div class="anatomy-card">
+                                <span class="card-tag">Anatomy Viewer</span>
+                                <h2>Cerebral Structure</h2>
+                                
+                                <!-- Floating 3D Brain Illustration Scene -->
+                                <div class="brain-viewer-scene">
+                                    <img src="3d_brain.jpg" alt="3D Brain Render" class="floating-3d-brain">
                                     
-                                    <div class="viewer-compare">
-                                        <div class="viewer-pane">
-                                            <span class="pane-label">Original MRI Scan</span>
-                                            <img id="result-raw-img" src="" alt="Original MRI">
+                                    <!-- Floating glassmorphic HUD Badges (concept from screenshot) -->
+                                    <div class="hud-badge hud-top-left" id="hud-status">
+                                        <i class="fa-solid fa-microchip"></i>
+                                        <div>
+                                            <span class="hud-title">Model State</span>
+                                            <span class="hud-value" id="model-status-text">Loading PyTorch...</span>
                                         </div>
-                                        <div class="viewer-pane">
-                                            <span class="pane-label">Grad-CAM Activation Highlight</span>
-                                            <img id="result-heatmap-img" src="" alt="Grad-CAM Overlay">
+                                    </div>
+                                    
+                                    <div class="hud-badge hud-bottom-right" id="hud-prediction" style="display: none;">
+                                        <div class="hud-prediction-color"></div>
+                                        <div>
+                                            <span class="hud-title">Active Classification</span>
+                                            <span class="hud-value" id="hud-pred-class">Glioma</span>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Findings Summary -->
-                                <div class="findings-card" id="findings-card">
-                                    <!-- Dynamic text according to predicted class -->
+                                <!-- Upload Input Container (Multiple file selection) -->
+                                <div class="ehr-upload-wrapper">
+                                    <div class="ehr-drop-zone" id="drop-zone">
+                                        <input type="file" id="file-input" accept="image/jpeg, image/png" multiple style="display: none;">
+                                        <div class="ehr-upload-prompt" id="upload-prompt">
+                                            <i class="fa-solid fa-cloud-arrow-up cloud-icon"></i>
+                                            <p>Drag T1 MRI Scans here or <span class="browse-link">browse files</span></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Upload Queue Panel -->
+                                    <div class="ehr-queue-container" id="batch-queue-container" style="display: none;">
+                                        <div class="ehr-queue-header">
+                                            <span>Scan Upload Queue (<span id="queue-count">0</span>)</span>
+                                            <button class="queue-clear-btn" id="clear-queue-btn"><i class="fa-solid fa-trash-can"></i> Clear</button>
+                                        </div>
+                                        <div class="ehr-queue-list" id="queue-list">
+                                            <!-- Dynamic items -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Action Bar -->
+                                    <div class="ehr-action-bar">
+                                        <button class="ehr-btn ehr-btn-primary" id="analyze-btn" disabled>
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Run Deep Learning Inference
+                                        </button>
+                                        <div id="batch-control-actions" style="display: none; gap: 8px; width: 100%; margin-top: 8px;">
+                                            <button class="ehr-btn ehr-btn-secondary" id="pause-btn" style="flex: 1;">
+                                                <i class="fa-solid fa-pause"></i> Pause
+                                            </button>
+                                            <button class="ehr-btn ehr-btn-secondary" id="cancel-btn" style="flex: 1; border-color: var(--danger); color: var(--danger);">
+                                                <i class="fa-solid fa-ban"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
-                
-                <!-- SECTION 2: Scan History -->
-                <section id="history-section" class="content-section">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Analysis History</h3>
-                            <p>History of MRI scans classified in this session (stored locally).</p>
+
+                        <!-- COLUMN B: Diagnostics & Visualizations console -->
+                        <div class="workspace-col-right">
+                            <div class="console-card">
+                                <div class="console-header">
+                                    <span class="card-tag">Diagnostics console</span>
+                                    <h2>Inference Visualization</h2>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div class="console-empty" id="results-empty">
+                                    <div class="stethoscope-anim"><i class="fa-solid fa-stethoscope"></i></div>
+                                    <p>Select Scans to Analyze</p>
+                                    <span>Drag MRI files into the queue or choose from the presets list below.</span>
+                                    
+                                    <!-- Preset Presets Selection (EHR visual mockup style buttons) -->
+                                    <div class="preset-selector">
+                                        <h4>Or test with sample scans:</h4>
+                                        <div class="preset-grid">
+                                            <div class="preset-item sample-item" data-file="dataset/Testing/glioma/Te-gl_10.jpg">
+                                                <span class="dot-indicator glioma"></span> Glioma Scan
+                                            </div>
+                                            <div class="preset-item sample-item" data-file="dataset/Testing/meningioma/Te-me_10.jpg">
+                                                <span class="dot-indicator meningioma"></span> Meningioma Scan
+                                            </div>
+                                            <div class="preset-item sample-item" data-file="dataset/Testing/notumor/Te-no_10.jpg">
+                                                <span class="dot-indicator normal"></span> Healthy Scan
+                                            </div>
+                                            <div class="preset-item sample-item" data-file="dataset/Testing/pituitary/Te-pi_10.jpg">
+                                                <span class="dot-indicator pituitary"></span> Pituitary Scan
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Loading Screen -->
+                                <div class="console-loading" id="results-loading" style="display: none;">
+                                    <div class="ehr-loader"></div>
+                                    <p id="loading-title">Analyzing Layers...</p>
+                                    <span id="loading-subtitle">Querying ResNet-18 model layer outputs</span>
+                                </div>
+
+                                <!-- Active Results Console -->
+                                <div class="console-results" id="results-content" style="display: none;">
+                                    <!-- Warning banner if model is not trained yet -->
+                                    <div class="warning-banner" id="model-warning-banner" style="display: none;">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span id="warning-text">Model weights not trained. Running on untrained base model.</span>
+                                    </div>
+
+                                    <div class="inspecting-banner">
+                                        <span class="label">Inspecting Target File:</span>
+                                        <span class="value" id="inspected-file-name">file_name.jpg</span>
+                                    </div>
+
+                                    <div class="metrics-row">
+                                        <div class="metric-pill">
+                                            <span class="m-label">Diagnostic Prediction</span>
+                                            <span class="m-value" id="prediction-class-badge">GLIOMA</span>
+                                        </div>
+                                        <div class="metric-pill">
+                                            <span class="m-label">Model Confidence</span>
+                                            <span class="m-value text-primary" id="prediction-confidence-val">94.8%</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Probability Chart Section -->
+                                    <div class="prob-section">
+                                        <h4>Diagnostic Probability Distribution</h4>
+                                        <div class="prob-chart-list" id="prob-list">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Side-by-Side Grad-CAM Compare visualizer -->
+                                    <div class="compare-visualizer">
+                                        <h4>Grad-CAM Explainable Neural Activation Maps</h4>
+                                        <p class="xai-subtext">The Grad-CAM overlay maps the pixel regions contributing to the neural network classification output (warm colors = high activation).</p>
+                                        
+                                        <div class="compare-view-grid">
+                                            <div class="compare-view-pane">
+                                                <span class="pane-tag">Original scan</span>
+                                                <img id="result-raw-img" src="" alt="Raw MRI Scan">
+                                            </div>
+                                            <div class="compare-view-pane">
+                                                <span class="pane-tag">Grad-CAM Overlay</span>
+                                                <img id="result-heatmap-img" src="" alt="Grad-CAM Activation Output">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Findings card -->
+                                    <div class="findings-box" id="findings-card">
+                                        <!-- Dynamic findings statement -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="history-list-wrapper">
-                            <table class="history-table" id="history-table">
+
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Patient Records History (EHR Table View) -->
+                <div id="history-section" class="content-panel">
+                    <div class="records-card">
+                        <div class="card-header">
+                            <span class="card-tag">Records Archive</span>
+                            <h2>Diagnostic History log</h2>
+                            <p>Stored locally on this browser workstation session.</p>
+                        </div>
+                        <div class="records-table-container">
+                            <table class="records-table">
                                 <thead>
                                     <tr>
-                                        <th>Date/Time</th>
-                                        <th>MRI File</th>
-                                        <th>Classification</th>
-                                        <th>Confidence</th>
-                                        <th>Action</th>
+                                        <th>Date / Timestamp</th>
+                                        <th>Target MRI File</th>
+                                        <th>Diagnosis</th>
+                                        <th>Confidence Index</th>
+                                        <th>Diagnostic Report</th>
                                     </tr>
                                 </thead>
                                 <tbody id="history-tbody">
                                     <tr>
-                                        <td colspan="5" class="no-history-text">No scans analyzed in this session yet.</td>
+                                        <td colspan="5" class="no-records">No patient records registered in this session.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </section>
-                
-                <!-- SECTION 3: Encyclopedia -->
-                <section id="education-section" class="content-section">
-                    <div class="encyclopedia-grid">
-                        
-                        <!-- Glioma -->
-                        <div class="card info-card">
-                            <div class="info-header glioma-theme">
-                                <i class="fa-solid fa-circle-nodes"></i>
-                                <h3>Glioma</h3>
-                            </div>
-                            <div class="info-body">
-                                <h4>What is it?</h4>
-                                <p>A type of tumor that starts in the glial cells of the brain or spine. Glial cells support, protect, and nourish neurons.</p>
-                                <h4>Anatomical Location</h4>
-                                <p>Commonly develops in the cerebral hemispheres (cerebrum), but can also form in the brainstem, cerebellum, and optic nerve.</p>
-                                <h4>MRI Characteristics</h4>
-                                <p>Usually appears as a poorly defined, infiltrative mass. High-grade gliomas (glioblastomas) typically show thick, irregular contrast enhancement with a central necrotic core.</p>
-                            </div>
+                </div>
+
+                <!-- SECTION 3: Tumor Encyclopedia (Timeline/Care Plan Style Layout) -->
+                <div id="education-section" class="content-panel">
+                    <div class="records-card">
+                        <div class="card-header">
+                            <span class="card-tag">Medical Encyclopedia</span>
+                            <h2>Anatomical & Diagnostic References</h2>
+                            <p>Standard neurological pathology definitions and typical magnetic resonance signs.</p>
                         </div>
                         
-                        <!-- Meningioma -->
-                        <div class="card info-card">
-                            <div class="info-header meningioma-theme">
-                                <i class="fa-solid fa-circle-dot"></i>
-                                <h3>Meningioma</h3>
+                        <div class="encyclopedia-timeline-wrapper">
+                            
+                            <!-- Glioma -->
+                            <div class="timeline-card glioma-border">
+                                <div class="t-badge glioma-bg">Glioma</div>
+                                <h3>Astrocytic & Glial Mass Pathologies</h3>
+                                <div class="t-meta">Location: Cerebral Hemispheres, Brainstem, Optic Tracts</div>
+                                <p>Tumorous masses arising from brain glial support cells (astrocytes, oligodendrocytes, ependymal cells). Glioblastomas represent high-grade (WHO Grade IV) variations.</p>
+                                <h4>MRI Diagnostics</h4>
+                                <ul class="timeline-checklist">
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Poorly demarcated infiltrative margins</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Central hypointense necrosis on T1w + contrast</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Surrounding vasogenic edema on T2/FLAIR</li>
+                                </ul>
                             </div>
-                            <div class="info-body">
-                                <h4>What is it?</h4>
-                                <p>A tumor that arises from the meninges—the three layers of membranes that surround and protect the brain and spinal cord.</p>
-                                <h4>Anatomical Location</h4>
-                                <p>Typically located on the surface of the brain (extra-axial), often along the dural sinuses, sagittal crest, or skull base.</p>
-                                <h4>MRI Characteristics</h4>
-                                <p>Well-circumscribed, round dural-based mass that enhances intensely and uniformly following contrast. Often displays a "dural tail" sign.</p>
+
+                            <!-- Meningioma -->
+                            <div class="timeline-card meningioma-border">
+                                <div class="t-badge meningioma-bg">Meningioma</div>
+                                <h3>Meningeal Membrane Pathology</h3>
+                                <div class="t-meta">Location: Sagittal Sinus, Sphenoid Wing, Cerebellar Tentorium</div>
+                                <p>Slow-growing extra-axial tumors originating from arachnoid cap cells of the meningeal coverings. Represents the most common primary brain tumor.</p>
+                                <h4>MRI Diagnostics</h4>
+                                <ul class="timeline-checklist">
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Sharp, well-demarcated boundary edges</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Homogeneous, intense contrast enhancement</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Characteristic "Dural Tail" sign</li>
+                                </ul>
                             </div>
-                        </div>
-                        
-                        <!-- Pituitary Tumor -->
-                        <div class="card info-card">
-                            <div class="info-header pituitary-theme">
-                                <i class="fa-solid fa-dna"></i>
-                                <h3>Pituitary Tumor</h3>
+
+                            <!-- Pituitary -->
+                            <div class="timeline-card pituitary-border">
+                                <div class="t-badge pituitary-bg">Pituitary</div>
+                                <h3>Sellar & Endocrine Region Tumors</h3>
+                                <div class="t-meta">Location: Sella Turcica, Pituitary Fossa</div>
+                                <p>Adenomateous growths in the pituitary gland. Can be secretory (prolactinoma, ACTH) or non-secretory, often compressing the optic chiasm.</p>
+                                <h4>MRI Diagnostics</h4>
+                                <ul class="timeline-checklist">
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Enlargement/expansion of the sella turcica</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Coronal T1 dynamic sequences for microadenomas</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Classic "snowman" or figure-8 shape</li>
+                                </ul>
                             </div>
-                            <div class="info-body">
-                                <h4>What is it?</h4>
-                                <p>An abnormal growth in the pituitary gland—a pea-sized endocrine gland located at the base of the brain that regulates essential hormones.</p>
-                                <h4>Anatomical Location</h4>
-                                <p>Located inside the sella turcica, directly below the optic chiasm at the base of the skull.</p>
-                                <h4>MRI Characteristics</h4>
-                                <p>Microadenomas (&lt;10mm) appear as hypointense lesions on T1 post-contrast compared to normal pituitary tissue. Macroadenomas (&gt;10mm) may expand the sella and display a classic "snowman" configuration.</p>
+
+                            <!-- Normal -->
+                            <div class="timeline-card normal-border">
+                                <div class="t-badge normal-bg">No Tumor</div>
+                                <h3>Normal Anatomical Configurations</h3>
+                                <div class="t-meta">Location: Symmetric Hemispheric Structures</div>
+                                <p>Healthy brain MRI scan. Shows symmetric ventricular volumes, midline alignment, uniform gray-white matter borders, and no signal anomalies.</p>
+                                <h4>MRI Diagnostics</h4>
+                                <ul class="timeline-checklist">
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Intact midline falx placement</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> Normal signal intensity across sequences</li>
+                                    <li><i class="fa-solid fa-circle-check text-primary"></i> No space-occupying lesions or mass effects</li>
+                                </ul>
                             </div>
-                        </div>
-                        
-                        <!-- No Tumor / Normal -->
-                        <div class="card info-card">
-                            <div class="info-header normal-theme">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                <h3>No Tumor (Normal)</h3>
-                            </div>
-                            <div class="info-body">
-                                <h4>What is it?</h4>
-                                <p>Healthy brain MRI scan. No abnormal growths, lesions, masses, or tissue deviations detected within the cerebrum, cerebellum, or brainstem.</p>
-                                <h4>Anatomical Checkpoints</h4>
-                                <p>Symmetrical brain structures, clear ventricular spaces, intact midline alignment, no mass effect, normal tissue signal intensity across T1 and T2 sequences.</p>
-                                <h4>Clinical Recommendation</h4>
-                                <p>Continue standard observation. In clinical workflows, classification scans are verified by radiologists alongside patient clinical symptom histories.</p>
-                            </div>
+
                         </div>
                     </div>
-                </section>
-                
-            </div>
-        </main>
+                </div>
+
+            </main>
+        </div>
     </div>
 
     <!-- Script Entry -->

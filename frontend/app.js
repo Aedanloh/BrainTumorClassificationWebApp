@@ -26,16 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function initializeDashboard(doctorName) {
         // Navigation elements
-        const navItems = document.querySelectorAll(".nav-item:not(#nav-logout)");
+        const navItems = document.querySelectorAll(".nav-tab");
         const navLogout = document.getElementById("nav-logout");
-        const sections = document.querySelectorAll(".content-section");
+        const sections = document.querySelectorAll(".content-panel");
         
         // Upload & Queue elements
         const dropZone = document.getElementById("drop-zone");
         const fileInput = document.getElementById("file-input");
         const uploadPrompt = document.getElementById("upload-prompt");
         const analyzeBtn = document.getElementById("analyze-btn");
-        const browseBtn = document.querySelector(".browse-btn");
+        const browseBtn = document.querySelector(".browse-link");
         const batchQueueContainer = document.getElementById("batch-queue-container");
         const queueList = document.getElementById("queue-list");
         const queueCountText = document.getElementById("queue-count");
@@ -55,6 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const pauseBtn = document.getElementById("pause-btn");
         const cancelBtn = document.getElementById("cancel-btn");
         
+        // HUD Overlay elements
+        const hudPrediction = document.getElementById("hud-prediction");
+        const hudPredClass = document.getElementById("hud-pred-class");
+        
         // Result elements
         const resultsEmpty = document.getElementById("results-empty");
         const resultsLoading = document.getElementById("results-loading");
@@ -70,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const resultRawImg = document.getElementById("result-raw-img");
         const resultHeatmapImg = document.getElementById("result-heatmap-img");
         const findingsCard = document.getElementById("findings-card");
-        const modelStatusText = document.getElementById("model-status-badge").querySelector("span");
+        const modelStatusText = document.getElementById("model-status-text");
         
         // History elements
         const historyTbody = document.getElementById("history-tbody");
@@ -87,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let isScanningCancelled = false;
         
         // Welcome message with doctor name
-        document.querySelector(".status-indicator .text").innerText = `Dr. ${doctorName}`;
+        document.getElementById("doctor-display-name").innerText = `Dr. ${doctorName}`;
         
         checkModelStatus();
         loadHistoryTable();
@@ -129,11 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // 2. File Selection & Drag-and-Drop
-        browseBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            if (isAnalyzing) return;
-            fileInput.click();
-        });
+        if (browseBtn) {
+            browseBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (isAnalyzing) return;
+                fileInput.click();
+            });
+        }
         
         dropZone.addEventListener("click", () => {
             if (isAnalyzing) return;
@@ -219,6 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsEmpty.style.display = "flex";
             batchStatsBanner.style.display = "none";
             batchControlActions.style.display = "none";
+            hudPrediction.style.display = "none";
         }
 
         // 3. Multiple Sample Scans Selection
@@ -345,6 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         activeInspectedItemId = null;
                         resultsContent.style.display = "none";
                         resultsEmpty.style.display = "flex";
+                        hudPrediction.style.display = "none";
                     }
                     
                     renderQueueList();
@@ -375,7 +383,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // Helper async pause check function
         function checkScanPauseState() {
             return new Promise(resolve => {
                 const interval = setInterval(() => {
@@ -387,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 6. Run Batch DL Analysis sequentially (With Pause & Cancel capability)
+        // 6. Run Batch DL Analysis sequentially
         analyzeBtn.addEventListener("click", async () => {
             if (uploadQueue.length === 0 || isAnalyzing) return;
             
@@ -416,6 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsEmpty.style.display = "none";
             resultsContent.style.display = "none";
             resultsLoading.style.display = "flex";
+            hudPrediction.style.display = "none";
             
             let processedCount = 0;
             let gliomaCount = 0;
@@ -426,20 +434,9 @@ document.addEventListener("DOMContentLoaded", () => {
             for (let i = 0; i < uploadQueue.length; i++) {
                 const item = uploadQueue[i];
                 
-                // Check if scan was cancelled
-                if (isScanningCancelled) {
-                    break;
-                }
-                
-                // Check if scanning was paused
-                if (isScanningPaused) {
-                    await checkScanPauseState();
-                }
-                
-                // Double check cancel state after pause release
-                if (isScanningCancelled) {
-                    break;
-                }
+                if (isScanningCancelled) break;
+                if (isScanningPaused) await checkScanPauseState();
+                if (isScanningCancelled) break;
                 
                 item.status = 'analyzing';
                 renderQueueList();
@@ -500,7 +497,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderQueueList();
             }
             
-            // Processing cleanup
             isAnalyzing = false;
             analyzeBtn.disabled = false;
             clearQueueBtn.disabled = false;
@@ -508,7 +504,6 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsLoading.style.display = "none";
             
             if (isScanningCancelled) {
-                // Set remaining pending items back to ready or clear them
                 uploadQueue.forEach(q => {
                     if (q.status === 'analyzing' || q.status === 'pending') {
                         q.status = 'pending';
@@ -522,7 +517,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 emptyTitle.innerText = "Batch Scan Cancelled";
                 emptyDesc.innerText = `Scanning was cancelled. ${processedCount} of ${uploadQueue.length} files completed analysis.`;
             } else {
-                // Render first completed item results
                 const firstProcessedItem = uploadQueue.find(q => q.status === 'completed' || q.status === 'failed');
                 if (firstProcessedItem) {
                     activeInspectedItemId = firstProcessedItem.id;
@@ -560,18 +554,30 @@ document.addEventListener("DOMContentLoaded", () => {
             const confidencePct = (data.confidence * 100).toFixed(1) + "%";
             
             predClassBadge.innerText = predClass.replace("_", " ");
-            predClassBadge.className = "result-badge " + predClass;
+            predClassBadge.className = "m-value " + predClass.toUpperCase();
             predConfVal.innerText = confidencePct;
             
+            // Dynamic color changes for badge matching tumor class
             if (predClass === "notumor") {
                 predClassBadge.style.color = "var(--success)";
-                predClassBadge.style.backgroundColor = "var(--success-light)";
                 predClassBadge.innerText = "NORMAL (NO TUMOR)";
-            } else {
-                predClassBadge.style.color = "var(--danger)";
-                predClassBadge.style.backgroundColor = "var(--danger-light)";
+            } else if (predClass === "glioma") {
+                predClassBadge.style.color = "var(--color-glioma)";
+            } else if (predClass === "meningioma") {
+                predClassBadge.style.color = "var(--color-meningioma)";
+            } else if (predClass === "pituitary") {
+                predClassBadge.style.color = "var(--color-pituitary)";
             }
             
+            // Update Holographic floating HUD badge on left column brain view
+            hudPrediction.style.display = "flex";
+            hudPrediction.className = `hud-badge hud-bottom-right ${predClass}`;
+            
+            let displayClassHUD = predClass.replace("_", " ");
+            if (predClass === "notumor") displayClassHUD = "No Tumor";
+            hudPredClass.innerText = `${displayClassHUD} (${confidencePct})`;
+            
+            // Build probability bars
             probList.innerHTML = "";
             const classesSorted = Object.entries(data.probabilities).sort((a, b) => b[1] - a[1]);
             
@@ -584,10 +590,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 let displayName = clsName.replace("_", " ");
                 if (clsName === "notumor") displayName = "No Tumor";
                 
+                let barColor = "var(--primary)";
+                if (clsName === "notumor") barColor = "var(--success)";
+                else if (clsName === "glioma") barColor = "var(--color-glioma)";
+                else if (clsName === "meningioma") barColor = "var(--color-meningioma)";
+                else if (clsName === "pituitary") barColor = "var(--color-pituitary)";
+                
                 row.innerHTML = `
                     <span class="prob-name">${displayName}</span>
                     <div class="prob-bar-container">
-                        <div class="prob-bar" style="width: ${prob * 100}%; background-color: ${clsName === 'notumor' ? 'var(--success)' : 'var(--primary)'}"></div>
+                        <div class="prob-bar" style="width: ${prob * 100}%; background-color: ${barColor}"></div>
                     </div>
                     <span class="prob-val">${probPct}</span>
                 `;
@@ -604,6 +616,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsEmpty.style.display = "flex";
             resultsContent.style.display = "none";
             resultsLoading.style.display = "none";
+            hudPrediction.style.display = "none";
             
             const emptyTitle = resultsEmpty.querySelector("p");
             const emptyDesc = resultsEmpty.querySelector("span");
@@ -620,11 +633,11 @@ document.addEventListener("DOMContentLoaded", () => {
             switch (predClass) {
                 case "glioma":
                     title = "Infiltrative Glioma Mass Characteristics Detected";
-                    desc = `The convolutional neural network identified features heavily aligned with a <strong>Glioma</strong> with ${confidencePct} confidence. The Grad-CAM explainability highlights localized regional signal intensities showing infiltrating margins. Gliomas originate from glial tissue and are characterized on T1w-contrast MRI by variable hyperintense masses. Clinical staging is recommended via immunohistochemical (IDH mutation / 1p19q codeletion) tests.`;
+                    desc = `The convolutional neural network identified features heavily aligned with a <strong>Glioma</strong> with ${confidencePct} confidence. The Grad-CAM explainability highlights localized regional signal intensities showing infiltrating margins. Gliomas originate from glial tissue and are characterized on T1w-contrast MRI by variable hyperintense masses. Staging is recommended via immunohistochemical (IDH mutation / 1p19q codeletion) tests.`;
                     break;
                 case "meningioma":
                     title = "Extra-Axial Dural-Based Meningioma Signature Detected";
-                    desc = `Features mapping to a <strong>Meningioma</strong> have been classified with ${confidencePct} confidence. The Grad-CAM heatmap outlines a focal dural-based highlight. Meningiomas are typically benign, slow-growing tumors arising from meningeal layers. In contrast-enhanced T1 scans, they exhibit uniform, intense enhancement. Mas effect check on the adjacent brain parenchyma is advised.`;
+                    desc = `Features mapping to a <strong>Meningioma</strong> have been classified with ${confidencePct} confidence. The Grad-CAM heatmap outlines a focal dural-based highlight. Meningiomas are typically benign, slow-growing tumors arising from meningeal layers. In contrast-enhanced T1 scans, they exhibit uniform, intense enhancement. Mass effect check on the adjacent brain parenchyma is advised.`;
                     break;
                 case "pituitary":
                     title = "Sellar/Sella Turcica Pituitary Expansion Detected";
@@ -649,13 +662,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(() => {})
             .then(data => {
                 if (data && data.error && data.error.includes("No image file")) {
-                    modelStatusText.innerText = "Model Ready (PyTorch)";
-                    const indicator = document.querySelector(".status-indicator");
-                    indicator.className = "status-indicator connected";
+                    modelStatusText.innerText = "Model Active";
                 } else {
-                    modelStatusText.innerText = "Demo Mode (Local)";
-                    const indicator = document.querySelector(".status-indicator");
-                    indicator.className = "status-indicator";
+                    modelStatusText.innerText = "Offline/Demo Mode";
                 }
             });
         }
@@ -686,7 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (scanHistory.length === 0) {
                 historyTbody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="no-history-text">No scans analyzed in this session yet.</td>
+                        <td colspan="5" class="no-records">No patient records registered in this session.</td>
                     </tr>
                 `;
                 return;
@@ -708,7 +717,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td><span class="history-class ${item.prediction}">${classDisplay}</span></td>
                     <td><strong>${confPct}</strong></td>
                     <td>
-                        <button class="btn btn-secondary btn-sm view-history-btn" data-index="${index}">
+                        <button class="ehr-btn ehr-btn-secondary btn-sm view-history-btn" data-index="${index}" style="padding: 6px 12px; font-size: 0.7rem; border-radius: 8px;">
                             <i class="fa-solid fa-eye"></i> View Results
                         </button>
                     </td>
@@ -734,7 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         warning: historicalData.warning
                     }, historicalData.filename);
                     
-                    document.getElementById("nav-analyzer").click();
+                    document.getElementById("tab-analyzer").click();
                 });
             });
         }
