@@ -1,27 +1,20 @@
-/* auth.css - Styling for Doctor Login/Signup Portal */
+/* auth.css - Futuristic Medical Portal (Dark Sci-Fi / Minimalist Holographic Theme) */
 :root {
-    --primary: hsl(210, 100%, 45%);
-    --primary-light: hsl(210, 100%, 96%);
-    --primary-medium: hsl(210, 90%, 85%);
-    --primary-dark: hsl(212, 100%, 25%);
+    --bg-dark: hsl(222, 47%, 6%);
+    --bg-card: rgba(15, 23, 42, 0.65);
+    --border-color: rgba(0, 220, 255, 0.15);
     
-    --success: hsl(150, 80%, 35%);
-    --success-light: hsl(150, 80%, 95%);
-    --warning: hsl(38, 95%, 45%);
-    --danger: hsl(354, 85%, 45%);
-    --danger-light: hsl(354, 85%, 96%);
+    --primary: hsl(190, 100%, 45%);       /* Glowing Cyan */
+    --primary-light: hsl(190, 100%, 93%);
+    --primary-glow: rgba(0, 220, 255, 0.25);
     
-    --slate-50: hsl(210, 40%, 98%);
-    --slate-100: hsl(210, 30%, 95%);
-    --slate-200: hsl(210, 20%, 90%);
-    --slate-300: hsl(210, 15%, 80%);
-    --slate-600: hsl(210, 15%, 40%);
-    --slate-700: hsl(210, 15%, 30%);
-    --slate-800: hsl(211, 20%, 22%);
-    --slate-900: hsl(212, 25%, 15%);
+    --success: hsl(150, 80%, 45%);
+    --danger: hsl(354, 85%, 55%);
+    --danger-light: rgba(239, 68, 68, 0.1);
     
-    --shadow-md: 0 4px 20px -4px rgba(15, 23, 42, 0.12);
-    --shadow-lg: 0 10px 30px -10px rgba(15, 23, 42, 0.16);
+    --text-main: hsl(210, 40%, 98%);
+    --text-muted: hsl(215, 20%, 65%);
+    --text-dark: hsl(220, 25%, 12%);
     
     --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -34,84 +27,133 @@
 
 body {
     font-family: var(--font-main);
-    background-color: var(--slate-50);
-    color: var(--slate-800);
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Subtle background glowing projection */
+body::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 25%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 220, 255, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .auth-wrapper {
     width: 100%;
-    max-width: 900px;
+    max-width: 950px;
     padding: 24px;
     display: flex;
     justify-content: center;
+    z-index: 1;
 }
 
 .auth-card {
-    background-color: white;
-    border: 1px solid var(--slate-200);
-    border-radius: 16px;
-    box-shadow: var(--shadow-lg);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 220, 255, 0.03);
+    backdrop-filter: blur(16px);
     display: grid;
-    grid-template-columns: 1fr 1.1fr;
+    grid-template-columns: 1.1fr 1fr;
     overflow: hidden;
     width: 100%;
-    min-height: 520px;
+    min-height: 560px;
 }
 
-/* Left Graphic Panel */
+/* Holographic Left Panel */
 .auth-graphic {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    color: white;
-    padding: 44px;
+    padding: 48px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
     position: relative;
-    overflow: hidden;
+    border-right: 1px solid rgba(0, 220, 255, 0.08);
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.4) 0%, rgba(10, 15, 30, 0.8) 100%);
 }
 
-.graphic-logo {
-    width: 60px;
-    height: 60px;
-    background-color: rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
+/* Floating, Hovering Brain Section */
+.brain-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 24px;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.auth-graphic h2 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
-}
-
-.auth-graphic p {
-    font-size: 0.85rem;
-    line-height: 1.5;
-    opacity: 0.85;
-    font-weight: 500;
-}
-
-.graphic-pattern {
-    position: absolute;
-    bottom: -50px;
-    right: -50px;
-    width: 250px;
     height: 250px;
+    width: 100%;
+    position: relative;
+}
+
+.hologram-brain {
+    width: 160px;
+    height: 160px;
+    filter: drop-shadow(0 0 15px rgba(0, 220, 255, 0.4));
+    animation: float 5s ease-in-out infinite, pulse-glow 5s ease-in-out infinite;
+}
+
+/* Hologram circular base under the brain */
+.hologram-base {
+    position: absolute;
+    bottom: 30px;
+    width: 120px;
+    height: 14px;
+    background: radial-gradient(ellipse, rgba(0, 220, 255, 0.25) 0%, rgba(0, 220, 255, 0) 70%);
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.03);
-    pointer-events: none;
+    animation: scale-base 5s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+/* SVG Brain elements */
+.brain-path {
+    stroke: var(--primary);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.brain-node {
+    fill: var(--primary);
+    animation: node-flash 3s infinite ease-in-out;
+}
+
+.brain-connection {
+    stroke: rgba(0, 220, 255, 0.3);
+    stroke-width: 0.8;
+    stroke-dasharray: 4 4;
+}
+
+.graphic-text {
+    text-align: center;
+    max-width: 320px;
+}
+
+.graphic-text h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px rgba(0, 220, 255, 0.3);
+}
+
+.graphic-text p {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 /* Right Form Panel */
@@ -120,38 +162,41 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    background-color: rgba(10, 15, 30, 0.3);
 }
 
 .form-header {
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
 .form-header h3 {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 700;
-    color: var(--slate-900);
+    color: white;
+    letter-spacing: -0.01em;
 }
 
 .form-header p {
     font-size: 0.8rem;
-    color: var(--slate-600);
-    margin-top: 4px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
 }
 
-/* Input Fields */
+/* Input Fields (Futuristic HUD Style) */
 .input-group {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
 .input-group label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: var(--slate-700);
+    color: var(--primary);
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
 }
 
 .input-wrapper {
@@ -163,8 +208,9 @@ body {
 .input-icon {
     position: absolute;
     left: 14px;
-    color: var(--slate-600);
+    color: var(--text-muted);
     font-size: 0.95rem;
+    transition: color 0.2s ease;
 }
 
 .input-wrapper input {
@@ -173,18 +219,22 @@ body {
     font-family: var(--font-main);
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--slate-800);
-    border: 1px solid var(--slate-300);
+    color: white;
+    border: 1px solid rgba(0, 220, 255, 0.1);
     border-radius: 8px;
-    background-color: var(--slate-50);
+    background-color: rgba(15, 23, 42, 0.6);
     outline: none;
     transition: all 0.2s ease;
 }
 
 .input-wrapper input:focus {
     border-color: var(--primary);
-    background-color: white;
-    box-shadow: 0 0 0 3px var(--primary-light);
+    background-color: rgba(15, 23, 42, 0.85);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.input-wrapper input:focus + .input-icon {
+    color: var(--primary);
 }
 
 /* Error Banner */
@@ -196,20 +246,14 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     font-size: 0.75rem;
     color: var(--danger);
     font-weight: 600;
     animation: shake 0.2s ease-in-out;
 }
 
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
-}
-
-/* Submit Button & Switch Link */
+/* Buttons UI */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -227,33 +271,35 @@ body {
 .btn-block {
     display: flex;
     width: 100%;
-    margin-top: 8px;
+    margin-top: 12px;
 }
 
 .btn-primary {
-    background-color: var(--primary);
+    background: linear-gradient(135deg, hsl(190, 100%, 40%), hsl(210, 100%, 45%));
     color: white;
-    box-shadow: 0 4px 12px rgba(0, 90, 220, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 220, 255, 0.15);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: hsl(210, 100%, 38%);
+    background: linear-gradient(135deg, hsl(190, 100%, 45%), hsl(210, 100%, 50%));
     transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 220, 255, 0.3);
 }
 
 .btn-primary:disabled {
-    background-color: var(--slate-300);
-    color: var(--slate-600);
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
     cursor: not-allowed;
     box-shadow: none;
 }
 
 .auth-switch {
-    margin-top: 24px;
+    margin-top: 28px;
     text-align: center;
     font-size: 0.8rem;
     font-weight: 500;
-    color: var(--slate-600);
+    color: var(--text-muted);
 }
 
 .auth-switch a {
@@ -261,21 +307,50 @@ body {
     font-weight: 700;
     text-decoration: none;
     margin-left: 4px;
+    text-shadow: 0 0 8px rgba(0, 220, 255, 0.2);
 }
 
 .auth-switch a:hover {
     text-decoration: underline;
 }
 
+/* Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 220, 255, 0.3)); opacity: 0.85; }
+    50% { filter: drop-shadow(0 0 25px rgba(0, 220, 255, 0.6)); opacity: 1; }
+}
+
+@keyframes scale-base {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(0.85); opacity: 0.3; }
+}
+
+@keyframes node-flash {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
 /* Responsiveness */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .auth-card {
         grid-template-columns: 1fr;
+        max-width: 460px;
     }
     .auth-graphic {
         display: none;
     }
     .auth-form-container {
-        padding: 32px;
+        padding: 36px 28px;
     }
 }
