@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // 2. Camera setup
             const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-            camera.position.z = 4.8;
+            camera.position.z = 3.9;
 
             // 3. Renderer setup (with transparency)
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });

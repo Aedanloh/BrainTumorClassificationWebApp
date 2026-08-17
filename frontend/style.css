@@ -67,7 +67,7 @@ body {
 
 .ehr-container {
     width: 100%;
-    max-width: 1380px;
+    max-width: 1680px;
     height: calc(100vh - 32px);
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -299,7 +299,7 @@ body {
 /* Workspace Grid (Anatomy Left, Diagnostic Right) */
 .workspace-grid {
     display: grid;
-    grid-template-columns: 1.1fr 1.2fr;
+    grid-template-columns: 1fr 1fr;
     gap: 24px;
     align-items: start;
 }
@@ -332,7 +332,7 @@ body {
 
 /* Anatomy Scene with Floating Brain & Hologram HUD */
 .brain-viewer-scene {
-    height: 420px;
+    height: 530px;
     background: radial-gradient(circle, hsl(210, 100%, 98%) 0%, hsl(220, 20%, 99%) 90%);
     border: 1px solid var(--border-color);
     border-radius: 20px;
