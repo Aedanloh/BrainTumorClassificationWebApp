@@ -38,6 +38,10 @@
                     <i class="fa-solid fa-book-medical"></i>
                     <span>Tumor Encyclopedia</span>
                 </a>
+                <a href="#" class="nav-item" id="nav-logout" style="margin-top: auto; color: var(--danger);">
+                    <i class="fa-solid fa-right-from-bracket" style="color: var(--danger);"></i>
+                    <span>Doctor Logout</span>
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -132,10 +136,18 @@
                             </div>
                             
                             <!-- Actions -->
-                            <div class="action-bar">
+                            <div class="action-bar" style="display: flex; flex-direction: column; gap: 10px;">
                                 <button class="btn btn-primary btn-block" id="analyze-btn" disabled>
                                     <i class="fa-solid fa-wand-magic-sparkles"></i> Run Batch DL Analysis
                                 </button>
+                                <div id="batch-control-actions" style="display: none; gap: 10px; width: 100%;">
+                                    <button class="btn btn-secondary" id="pause-btn" style="flex: 1;">
+                                        <i class="fa-solid fa-pause"></i> Pause
+                                    </button>
+                                    <button class="btn btn-secondary" id="cancel-btn" style="flex: 1; border-color: var(--danger); color: var(--danger);">
+                                        <i class="fa-solid fa-ban"></i> Cancel
+                                    </button>
+                                </div>
                             </div>
                             
                             <!-- Sample Scans Section -->

@@ -1,5 +1,15 @@
 <?php
+session_start();
+
+// Enable session security check
 header('Content-Type: application/json');
+if (!isset($_SESSION['doctor_id'])) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Unauthorized access. Please log in as a doctor.'
+    ]);
+    exit;
+}
 
 // Enable error reporting for debugging, but we will catch errors and format as JSON
 ini_set('display_errors', 0);
@@ -26,7 +36,7 @@ $raw_filename = '';
 // Check if it's a sample scan request or file upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sample_path'])) {
     // Handle Sample Scan selection
-    $sample_rel_path = $_POST['sample_path']; // e.g. "dataset/Testing/glioma/Te-gl_0010.jpg"
+    $sample_rel_path = $_POST['sample_path']; // e.g. "dataset/Testing/glioma/Te-gl_10.jpg"
     $sample_abs_path = $base_dir . '/' . $sample_rel_path;
     
     if (!file_exists($sample_abs_path)) {

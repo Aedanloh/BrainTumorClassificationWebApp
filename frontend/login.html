@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Login - NeuroClassify Diagnostics</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Auth Style -->
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            
+            <!-- Side Graphic Panel -->
+            <div class="auth-graphic">
+                <div class="graphic-content">
+                    <div class="graphic-logo">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h2>NeuroClassify Portal</h2>
+                    <p>Deep learning medical imaging classification system. Providing diagnostic insights and explainability metrics for neuro-oncology.</p>
+                </div>
+                <div class="graphic-pattern"></div>
+            </div>
+            
+            <!-- Auth Form Panel -->
+            <div class="auth-form-container">
+                <div class="form-header">
+                    <h3 id="form-title">Welcome back, Doctor</h3>
+                    <p id="form-subtitle">Please enter your credentials to access the MRI Analyzer.</p>
+                </div>
+                
+                <!-- Error Banner -->
+                <div class="error-banner" id="error-banner" style="display: none;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="error-message">Error message details here.</span>
+                </div>
+
+                <form id="auth-form" class="auth-form">
+                    <!-- Name Field (Only visible in Register mode) -->
+                    <div class="input-group" id="name-group" style="display: none;">
+                        <label for="doctor-name">Full Name</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-user input-icon"></i>
+                            <input type="text" id="doctor-name" placeholder="Dr. Jane Doe">
+                        </div>
+                    </div>
+                    
+                    <!-- Email Field -->
+                    <div class="input-group">
+                        <label for="doctor-email">Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="doctor-email" placeholder="jane.doe@hospital.com" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="input-group">
+                        <label for="doctor-password">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="doctor-password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+                        <i class="fa-solid fa-right-to-bracket"></i> <span id="submit-text">Log In</span>
+                    </button>
+                </form>
+                
+                <!-- Switch Auth Mode Link -->
+                <div class="auth-switch">
+                    <span id="switch-prompt">New to the platform?</span>
+                    <a href="#" id="switch-link">Create an account</a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Auth Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const authForm = document.getElementById("auth-form");
+            const nameGroup = document.getElementById("name-group");
+            const doctorName = document.getElementById("doctor-name");
+            const doctorEmail = document.getElementById("doctor-email");
+            const doctorPassword = document.getElementById("doctor-password");
+            const submitBtn = document.getElementById("submit-btn");
+            const submitText = document.getElementById("submit-text");
+            const formTitle = document.getElementById("form-title");
+            const formSubtitle = document.getElementById("form-subtitle");
+            const switchPrompt = document.getElementById("switch-prompt");
+            const switchLink = document.getElementById("switch-link");
+            const errorBanner = document.getElementById("error-banner");
+            const errorMessage = document.getElementById("error-message");
+            
+            let isRegisterMode = false;
+            
+            // Check if user is already logged in on load
+            fetch("../backend/auth.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "check_session" })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.logged_in) {
+                    window.location.href = "index.html"; // Already logged in, redirect
+                }
+            });
+            
+            // Switch Auth Mode (Login vs Register)
+            switchLink.addEventListener("click", (e) => {
+                e.preventDefault();
+                errorBanner.style.display = "none";
+                isRegisterMode = !isRegisterMode;
+                
+                if (isRegisterMode) {
+                    formTitle.innerText = "Register Account";
+                    formSubtitle.innerText = "Set up your medical diagnostic account details.";
+                    nameGroup.style.display = "block";
+                    doctorName.required = true;
+                    submitText.innerText = "Register Account";
+                    submitBtn.querySelector("i").className = "fa-solid fa-user-plus";
+                    switchPrompt.innerText = "Already registered?";
+                    switchLink.innerText = "Log in here";
+                } else {
+                    formTitle.innerText = "Welcome back, Doctor";
+                    formSubtitle.innerText = "Please enter your credentials to access the MRI Analyzer.";
+                    nameGroup.style.display = "none";
+                    doctorName.required = false;
+                    submitText.innerText = "Log In";
+                    submitBtn.querySelector("i").className = "fa-solid fa-right-to-bracket";
+                    switchPrompt.innerText = "New to the platform?";
+                    switchLink.innerText = "Create an account";
+                }
+            });
+            
+            // Form Submit Handler
+            authForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                errorBanner.style.display = "none";
+                submitBtn.disabled = true;
+                
+                const action = isRegisterMode ? "signup" : "login";
+                
+                const payload = {
+                    action: action,
+                    email: doctorEmail.value,
+                    password: doctorPassword.value
+                };
+                
+                if (isRegisterMode) {
+                    payload.name = doctorName.value;
+                }
+                
+                fetch("../backend/auth.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    submitBtn.disabled = false;
+                    if (data.success) {
+                        window.location.href = "index.html"; // Redirect to dashboard
+                    } else {
+                        showError(data.error || "An authentication error occurred.");
+                    }
+                })
+                .catch(err => {
+                    submitBtn.disabled = false;
+                    showError("Failed to connect to authentication server.");
+                });
+            });
+            
+            function showError(msg) {
+                errorBanner.style.display = "flex";
+                errorMessage.innerText = msg;
+            }
+        });
+    </script>
+</body>
+</html>
