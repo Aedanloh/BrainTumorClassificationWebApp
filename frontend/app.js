@@ -96,6 +96,213 @@ document.addEventListener("DOMContentLoaded", () => {
         checkModelStatus();
         loadHistoryTable();
 
+        // ----------------------------------------------------
+        // THREE.JS 3D BRAIN ROTATION & HOVER ANIMATION
+        // ----------------------------------------------------
+        let pointMaterial, lineMaterial, update3DBrainColor;
+        
+        init3DBrain();
+
+        function init3DBrain() {
+            const container = document.getElementById("brain-3d-canvas-container");
+            if (!container || typeof THREE === "undefined") return;
+
+            const width = container.clientWidth || 360;
+            const height = container.clientHeight || 420;
+
+            // 1. Scene setup
+            const scene = new THREE.Scene();
+
+            // 2. Camera setup
+            const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+            camera.position.z = 4.8;
+
+            // 3. Renderer setup (with transparency)
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // 4. Create Brain particle-grid group
+            const brainGroup = new THREE.Group();
+            scene.add(brainGroup);
+
+            const numPoints = 1400;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(numPoints * 3);
+            const originalPositions = [];
+            const brainPoints = [];
+
+            // Draw two wrinkled lobes mathematically (ellipsoid distribution + organic noise)
+            for (let i = 0; i < numPoints; i++) {
+                const u = Math.random();
+                const v = Math.random();
+                const theta = u * 2 * Math.PI;
+                const phi = Math.acos(2 * v - 1);
+
+                // Lobe diameters
+                const rx = 1.35;
+                const ry = 1.1;
+                const rz = 0.95;
+
+                const isLeft = Math.random() > 0.5;
+                const offsetX = isLeft ? -0.28 : 0.28;
+
+                let x = rx * Math.sin(phi) * Math.cos(theta);
+                let y = ry * Math.sin(phi) * Math.sin(theta);
+                let z = rz * Math.cos(phi);
+
+                // Add organic displacement wrinkles using high freq sine waves
+                const wrinkle = 0.14 * Math.sin(x * 6.5) * Math.sin(y * 6.5) * Math.sin(z * 6.5);
+                x += x * wrinkle + offsetX;
+                y += y * wrinkle;
+                z += z * wrinkle;
+
+                // Pinch bottom points to form a brain stem
+                if (y < -0.5) {
+                    const stemFactor = Math.max(0.2, (y + 1.1) / 0.6);
+                    x *= stemFactor * 0.9;
+                    z *= stemFactor * 0.9;
+                }
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                const posVector = new THREE.Vector3(x, y, z);
+                brainPoints.push(posVector);
+                originalPositions.push({ x, y, z, offset: Math.random() * Math.PI * 2 });
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            // 5. Connect nearby nodes with high-tech neural lines
+            const linePositions = [];
+            for (let i = 0; i < numPoints; i++) {
+                const p1 = brainPoints[i];
+                let connections = 0;
+                for (let j = i + 1; j < numPoints; j++) {
+                    if (connections > 2) break; // Keep lines clean and sparse (minimalist B-side style)
+                    const p2 = brainPoints[j];
+                    const dist = p1.distanceTo(p2);
+                    if (dist < 0.26) {
+                        linePositions.push(p1.x, p1.y, p1.z);
+                        linePositions.push(p2.x, p2.y, p2.z);
+                        connections++;
+                    }
+                }
+            }
+
+            const lineGeometry = new THREE.BufferGeometry();
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+            
+            lineMaterial = new THREE.LineBasicMaterial({
+                color: 0x00b4d8, // Teal default
+                transparent: true,
+                opacity: 0.14
+            });
+
+            const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
+            brainGroup.add(lineSegments);
+
+            // 6. Point particle systems
+            pointMaterial = new THREE.PointsMaterial({
+                color: 0x00b4d8,
+                size: 0.05,
+                transparent: true,
+                opacity: 0.8,
+                sizeAttenuation: true
+            });
+
+            const pointsSystem = new THREE.Points(geometry, pointMaterial);
+            brainGroup.add(pointsSystem);
+
+            // 7. Mouse drag interaction for custom rotation
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            const mainContentEl = document.querySelector(".ehr-content");
+            
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaMove = {
+                    x: e.clientX - previousMousePosition.x,
+                    y: e.clientY - previousMousePosition.y
+                };
+
+                brainGroup.rotation.y += deltaMove.x * 0.007;
+                brainGroup.rotation.x += deltaMove.y * 0.007;
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            // 8. Animation loop (rotating & hovering)
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const time = clock.getElapsedTime();
+
+                // Gentle hover translation
+                brainGroup.position.y = Math.sin(time * 1.2) * 0.11;
+
+                // Slow default Y rotation if not dragging
+                if (!isDragging) {
+                    brainGroup.rotation.y += 0.004;
+                }
+
+                // Breathing/twinkling effect on nodes
+                const positionAttr = pointsSystem.geometry.attributes.position;
+                for (let i = 0; i < numPoints; i++) {
+                    const orig = originalPositions[i];
+                    // Pulse distance slightly over time
+                    const pulse = 1.0 + 0.02 * Math.sin(time * 2.0 + orig.offset);
+                    positionAttr.array[i * 3] = orig.x * pulse;
+                    positionAttr.array[i * 3 + 1] = orig.y * pulse;
+                    positionAttr.array[i * 3 + 2] = orig.z * pulse;
+                }
+                positionAttr.needsUpdate = true;
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // 9. Resize handler
+            window.addEventListener('resize', () => {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(newWidth, newHeight);
+            });
+
+            // 10. Color updating function
+            update3DBrainColor = function(predClass) {
+                const colors = {
+                    'glioma': 0x1b75ff,      // Soft Blue
+                    'meningioma': 0x9b30ff,  // Purple
+                    'pituitary': 0xff2e7e,   // Pink-Red
+                    'notumor': 0x00c864,     // Teal-Green
+                    'default': 0x00b4d8      // Teal default
+                };
+                const activeColor = colors[predClass] || colors['default'];
+                
+                // Animate color transition
+                pointMaterial.color.setHex(activeColor);
+                lineMaterial.color.setHex(activeColor);
+            };
+        }
+
         // 1. Navigation Controller
         navItems.forEach(item => {
             item.addEventListener("click", (e) => {
@@ -226,6 +433,9 @@ document.addEventListener("DOMContentLoaded", () => {
             batchStatsBanner.style.display = "none";
             batchControlActions.style.display = "none";
             hudPrediction.style.display = "none";
+            
+            // Reset brain color to default
+            if (update3DBrainColor) update3DBrainColor('default');
         }
 
         // 3. Multiple Sample Scans Selection
@@ -353,6 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         resultsContent.style.display = "none";
                         resultsEmpty.style.display = "flex";
                         hudPrediction.style.display = "none";
+                        if (update3DBrainColor) update3DBrainColor('default');
                     }
                     
                     renderQueueList();
@@ -424,6 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsContent.style.display = "none";
             resultsLoading.style.display = "flex";
             hudPrediction.style.display = "none";
+            if (update3DBrainColor) update3DBrainColor('default');
             
             let processedCount = 0;
             let gliomaCount = 0;
@@ -577,6 +789,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (predClass === "notumor") displayClassHUD = "No Tumor";
             hudPredClass.innerText = `${displayClassHUD} (${confidencePct})`;
             
+            // Update the 3D Brain model color code in real time! (holographic glowing feedback)
+            if (update3DBrainColor) {
+                update3DBrainColor(predClass);
+            }
+            
             // Build probability bars
             probList.innerHTML = "";
             const classesSorted = Object.entries(data.probabilities).sort((a, b) => b[1] - a[1]);
@@ -617,6 +834,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsContent.style.display = "none";
             resultsLoading.style.display = "none";
             hudPrediction.style.display = "none";
+            if (update3DBrainColor) update3DBrainColor('default');
             
             const emptyTitle = resultsEmpty.querySelector("p");
             const emptyDesc = resultsEmpty.querySelector("span");
