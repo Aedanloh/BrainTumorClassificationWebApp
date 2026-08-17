@@ -24,7 +24,7 @@ def hook_gradient(module, grad_input, grad_output):
 def generate_gradcam(model, input_tensor, original_img_path, output_path, target_layer):
     # Register hooks
     handle_forward = target_layer.register_forward_hook(hook_feature)
-    handle_backward = target_layer.register_backward_hook(hook_gradient)
+    handle_backward = target_layer.register_full_backward_hook(hook_gradient)
     
     # Forward pass
     output = model(input_tensor)
