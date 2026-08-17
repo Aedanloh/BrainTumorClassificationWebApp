@@ -3,29 +3,42 @@ document.addEventListener("DOMContentLoaded", () => {
     const navItems = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".content-section");
     
-    // Upload elements
+    // Upload & Queue elements
     const dropZone = document.getElementById("drop-zone");
     const fileInput = document.getElementById("file-input");
-    const uploadPreview = document.getElementById("upload-preview");
-    const previewImg = document.getElementById("preview-img");
-    const uploadPrompt = document.querySelector(".upload-prompt");
-    const changeFileBtn = document.getElementById("change-file-btn");
+    const uploadPrompt = document.getElementById("upload-prompt");
     const analyzeBtn = document.getElementById("analyze-btn");
     const browseBtn = document.querySelector(".browse-btn");
+    const batchQueueContainer = document.getElementById("batch-queue-container");
+    const queueList = document.getElementById("queue-list");
+    const queueCountText = document.getElementById("queue-count");
+    const clearQueueBtn = document.getElementById("clear-queue-btn");
+    
+    // Batch Banner elements
+    const batchStatsBanner = document.getElementById("batch-stats-banner");
+    const batchTotalCnt = document.getElementById("batch-total-cnt");
+    const batchProcessedCnt = document.getElementById("batch-processed-cnt");
+    const batchGliomaCnt = document.getElementById("batch-glioma-cnt");
+    const batchMeningiomaCnt = document.getElementById("batch-meningioma-cnt");
+    const batchPituitaryCnt = document.getElementById("batch-pituitary-cnt");
+    const batchNoTumorCnt = document.getElementById("batch-notumor-cnt");
     
     // Result elements
     const resultsEmpty = document.getElementById("results-empty");
     const resultsLoading = document.getElementById("results-loading");
+    const loadingTitle = document.getElementById("loading-title");
+    const loadingSubtitle = document.getElementById("loading-subtitle");
     const resultsContent = document.getElementById("results-content");
     const modelWarningBanner = document.getElementById("model-warning-banner");
     const warningText = document.getElementById("warning-text");
+    const inspectedFileName = document.getElementById("inspected-file-name");
     const predClassBadge = document.getElementById("prediction-class-badge");
     const predConfVal = document.getElementById("prediction-confidence-val");
     const probList = document.getElementById("prob-list");
     const resultRawImg = document.getElementById("result-raw-img");
     const resultHeatmapImg = document.getElementById("result-heatmap-img");
     const findingsCard = document.getElementById("findings-card");
-    const modelStatusText = document.getElementById("model-status-text");
+    const modelStatusText = document.getElementById("model-status-badge").querySelector("span");
     
     // History elements
     const historyTbody = document.getElementById("history-tbody");
@@ -34,9 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const sampleItems = document.querySelectorAll(".sample-item");
     
     // App State
-    let selectedFile = null;
-    let selectedSamplePath = null;
+    let uploadQueue = []; // Array of { id, file, name, size, type, samplePath, status: 'pending'|'analyzing'|'completed'|'failed', result: null|data }
     let scanHistory = JSON.parse(localStorage.getItem("neuro_scan_history") || "[]");
+    let activeInspectedItemId = null;
+    let isAnalyzing = false;
     
     // Check model status initially
     checkModelStatus();
@@ -61,20 +75,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 2. Drag and Drop Upload Zone Handlers
+    // 2. File Selection & Drag-and-Drop
     browseBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (isAnalyzing) return;
         fileInput.click();
     });
     
     dropZone.addEventListener("click", () => {
-        if (!selectedFile && !selectedSamplePath) {
-            fileInput.click();
-        }
+        if (isAnalyzing) return;
+        fileInput.click();
     });
     
     dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
+        if (isAnalyzing) return;
         dropZone.classList.add("dragover");
     });
     
@@ -85,137 +100,348 @@ document.addEventListener("DOMContentLoaded", () => {
     dropZone.addEventListener("drop", (e) => {
         e.preventDefault();
         dropZone.classList.remove("dragover");
+        if (isAnalyzing) return;
         
         if (e.dataTransfer.files.length > 0) {
-            handleFileSelect(e.dataTransfer.files[0]);
+            handleMultipleFilesSelect(e.dataTransfer.files);
         }
     });
     
     fileInput.addEventListener("change", (e) => {
+        if (isAnalyzing) return;
         if (e.target.files.length > 0) {
-            handleFileSelect(e.target.files[0]);
+            handleMultipleFilesSelect(e.target.files);
         }
     });
     
-    changeFileBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        resetUpload();
-        fileInput.click();
+    clearQueueBtn.addEventListener("click", () => {
+        if (isAnalyzing) return;
+        resetQueue();
     });
 
-    // Helper to handle and preview file selection
-    function handleFileSelect(file) {
-        // Validate type
-        if (!file.type.match("image/jpeg") && !file.type.match("image/png") && !file.type.match("image/jpg")) {
-            alert("Invalid file format. Please upload a JPEG or PNG image.");
-            return;
-        }
-        
-        // Validate size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert("File size exceeds 5MB limit.");
-            return;
-        }
-        
-        selectedFile = file;
-        selectedSamplePath = null;
-        
-        // Clear active states on sample cards
+    function handleMultipleFilesSelect(files) {
+        // Clear active states on sample cards since user is uploading files
         sampleItems.forEach(card => card.classList.remove("active"));
         
-        // Render preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            previewImg.src = e.target.result;
-            uploadPrompt.style.display = "none";
-            uploadPreview.style.display = "block";
-            analyzeBtn.disabled = false;
-        };
-        reader.readAsDataURL(file);
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // Validate type
+            if (!file.type.match("image/jpeg") && !file.type.match("image/png") && !file.type.match("image/jpg")) {
+                alert(`"${file.name}" is not a valid format. Please upload JPEG or PNG images.`);
+                continue;
+            }
+            
+            // Validate size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`"${file.name}" exceeds 5MB size limit.`);
+                continue;
+            }
+            
+            // Avoid duplicate additions
+            if (uploadQueue.some(item => item.name === file.name && item.size === file.size)) {
+                continue;
+            }
+            
+            const queueItem = {
+                id: 'upload_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                file: file,
+                name: file.name,
+                size: file.size,
+                samplePath: null,
+                status: 'pending',
+                result: null
+            };
+            
+            uploadQueue.push(queueItem);
+        }
+        
+        renderQueueList();
     }
     
-    // Reset the upload interface
-    function resetUpload() {
-        selectedFile = null;
-        selectedSamplePath = null;
+    function resetQueue() {
+        uploadQueue = [];
         fileInput.value = "";
-        previewImg.src = "";
-        uploadPreview.style.display = "none";
-        uploadPrompt.style.display = "flex";
+        batchQueueContainer.style.display = "none";
         analyzeBtn.disabled = true;
         sampleItems.forEach(card => card.classList.remove("active"));
+        
+        // Hide result view if open
+        resultsContent.style.display = "none";
+        resultsEmpty.style.display = "flex";
+        batchStatsBanner.style.display = "none";
     }
 
-    // 3. Sample Scans Selection
+    // 3. Multiple Sample Scans Selection
     sampleItems.forEach(item => {
         item.addEventListener("click", () => {
-            resetUpload();
-            
-            // Highlight card
-            sampleItems.forEach(card => card.classList.remove("active"));
-            item.classList.add("active");
+            if (isAnalyzing) return;
             
             const fileUrl = item.getAttribute("data-file");
-            selectedSamplePath = fileUrl;
+            const sampleName = fileUrl.split("/").pop();
             
-            // Set image preview from sample path (served by local server relative to FYP root)
-            previewImg.src = "../" + fileUrl;
-            uploadPrompt.style.display = "none";
-            uploadPreview.style.display = "block";
-            analyzeBtn.disabled = false;
+            // Check if this sample is already in the queue
+            const index = uploadQueue.findIndex(q => q.samplePath === fileUrl);
+            
+            if (index > -1) {
+                // Remove it
+                uploadQueue.splice(index, 1);
+                item.classList.remove("active");
+            } else {
+                // Add it
+                const queueItem = {
+                    id: 'sample_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    file: null,
+                    name: sampleName,
+                    size: 0,
+                    samplePath: fileUrl,
+                    status: 'pending',
+                    result: null
+                };
+                uploadQueue.push(queueItem);
+                item.classList.add("active");
+            }
+            
+            renderQueueList();
         });
     });
 
-    // 4. Run Analysis
-    analyzeBtn.addEventListener("click", () => {
-        if (!selectedFile && !selectedSamplePath) return;
+    // 4. Render the Queue List UI
+    function renderQueueList() {
+        if (uploadQueue.length === 0) {
+            batchQueueContainer.style.display = "none";
+            analyzeBtn.disabled = true;
+            return;
+        }
         
-        // Toggle view states
+        batchQueueContainer.style.display = "block";
+        queueCountText.innerText = uploadQueue.length;
+        analyzeBtn.disabled = false;
+        
+        queueList.innerHTML = "";
+        
+        uploadQueue.forEach(item => {
+            const div = document.createElement("div");
+            div.className = `queue-item ${activeInspectedItemId === item.id ? 'active' : ''}`;
+            div.setAttribute("data-id", item.id);
+            
+            // Status label mapping
+            let statusText = "Ready";
+            let statusClass = "pending";
+            let iconHtml = '<i class="fa-regular fa-clock"></i>';
+            
+            if (item.status === 'analyzing') {
+                statusText = "Analyzing...";
+                statusClass = "analyzing";
+                iconHtml = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            } else if (item.status === 'completed') {
+                statusText = "Completed";
+                statusClass = "completed";
+                iconHtml = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (item.status === 'failed') {
+                statusText = "Failed";
+                statusClass = "failed";
+                iconHtml = '<i class="fa-solid fa-circle-xmark"></i>';
+            }
+            
+            // Right-side result pill
+            let badgeHtml = '';
+            if (item.status === 'completed' && item.result) {
+                badgeHtml = `<span class="queue-item-badge ${item.result.prediction}">${item.result.prediction.replace('_', ' ')}</span>`;
+            }
+            
+            div.innerHTML = `
+                <div class="queue-item-info">
+                    <span class="queue-item-name" title="${item.name}">${item.name}</span>
+                    <span class="queue-item-status ${statusClass}">
+                        ${iconHtml} ${statusText}
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    ${badgeHtml}
+                    <button class="queue-item-remove" data-id="${item.id}" ${isAnalyzing ? 'disabled style="opacity: 0.3;"' : ''}>
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Clicking item loads its details (only if completed/failed)
+            div.addEventListener("click", () => {
+                if (item.status === 'completed') {
+                    activeInspectedItemId = item.id;
+                    document.querySelectorAll(".queue-item").forEach(el => el.classList.remove("active"));
+                    div.classList.add("active");
+                    renderResults(item.result, item.name);
+                } else if (item.status === 'failed') {
+                    activeInspectedItemId = item.id;
+                    document.querySelectorAll(".queue-item").forEach(el => el.classList.remove("active"));
+                    div.classList.add("active");
+                    showErrorState(item.result.error);
+                }
+            });
+            
+            queueList.appendChild(div);
+        });
+        
+        // Add delete button events
+        document.querySelectorAll(".queue-item-remove").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (isAnalyzing) return;
+                
+                const id = btn.getAttribute("data-id");
+                const item = uploadQueue.find(q => q.id === id);
+                
+                // Toggle off active state in sample card if it was a sample scan
+                if (item && item.samplePath) {
+                    const card = document.querySelector(`.sample-item[data-file="${item.samplePath}"]`);
+                    if (card) card.classList.remove("active");
+                }
+                
+                uploadQueue = uploadQueue.filter(q => q.id !== id);
+                
+                // Handle deleting the currently inspected item
+                if (activeInspectedItemId === id) {
+                    activeInspectedItemId = null;
+                    resultsContent.style.display = "none";
+                    resultsEmpty.style.display = "flex";
+                }
+                
+                renderQueueList();
+            });
+        });
+    }
+
+    // 5. Run Batch DL Analysis sequentially
+    analyzeBtn.addEventListener("click", async () => {
+        if (uploadQueue.length === 0 || isAnalyzing) return;
+        
+        isAnalyzing = true;
+        analyzeBtn.disabled = true;
+        clearQueueBtn.disabled = true;
+        
+        // Setup stats banner
+        batchStatsBanner.style.display = "grid";
+        batchTotalCnt.innerText = uploadQueue.length;
+        batchProcessedCnt.innerText = "0";
+        batchGliomaCnt.innerText = "0";
+        batchMeningiomaCnt.innerText = "0";
+        batchPituitaryCnt.innerText = "0";
+        batchNoTumorCnt.innerText = "0";
+        
+        // Show loading screen
         resultsEmpty.style.display = "none";
         resultsContent.style.display = "none";
         resultsLoading.style.display = "flex";
         
-        const formData = new FormData();
+        let processedCount = 0;
+        let gliomaCount = 0;
+        let meningiomaCount = 0;
+        let pituitaryCount = 0;
+        let notumorCount = 0;
         
-        if (selectedSamplePath) {
-            formData.append("sample_path", selectedSamplePath);
-        } else {
-            formData.append("mri_image", selectedFile);
+        // Process each queue item in sequence
+        for (let i = 0; i < uploadQueue.length; i++) {
+            const item = uploadQueue[i];
+            
+            // Skip already completed runs if needed, but here we run everything fresh
+            item.status = 'analyzing';
+            renderQueueList();
+            
+            loadingTitle.innerText = `Processing Scan ${i + 1} of ${uploadQueue.length}`;
+            loadingSubtitle.innerText = `Analyzing: ${item.name}...`;
+            
+            const formData = new FormData();
+            if (item.samplePath) {
+                formData.append("sample_path", item.samplePath);
+            } else {
+                formData.append("mri_image", item.file);
+            }
+            
+            try {
+                const response = await fetch("../backend/upload.php", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error("HTTP connection error.");
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    item.status = 'completed';
+                    item.result = data;
+                    
+                    // Increment batch counters
+                    processedCount++;
+                    batchProcessedCnt.innerText = processedCount;
+                    
+                    if (data.prediction === "glioma") {
+                        gliomaCount++;
+                        batchGliomaCnt.innerText = gliomaCount;
+                    } else if (data.prediction === "meningioma") {
+                        meningiomaCount++;
+                        batchMeningiomaCnt.innerText = meningiomaCount;
+                    } else if (data.prediction === "pituitary") {
+                        pituitaryCount++;
+                        batchPituitaryCnt.innerText = pituitaryCount;
+                    } else { // notumor
+                        notumorCount++;
+                        batchNoTumorCnt.innerText = notumorCount;
+                    }
+                    
+                    // Save to history list
+                    saveToHistory(data, item.name);
+                } else {
+                    item.status = 'failed';
+                    item.result = { error: data.error };
+                }
+            } catch (err) {
+                item.status = 'failed';
+                item.result = { error: err.message || "Network request failed." };
+            }
+            
+            renderQueueList();
         }
         
-        // Call backend upload script
-        fetch("../backend/upload.php", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("HTTP connection error. Check server logs.");
-            }
-            return response.json();
-        })
-        .then(data => {
-            resultsLoading.style.display = "none";
+        // Batch completed
+        isAnalyzing = false;
+        analyzeBtn.disabled = false;
+        clearQueueBtn.disabled = false;
+        resultsLoading.style.display = "none";
+        
+        // Select the first completed/failed item to display details
+        const firstProcessedItem = uploadQueue.find(q => q.status === 'completed' || q.status === 'failed');
+        if (firstProcessedItem) {
+            activeInspectedItemId = firstProcessedItem.id;
+            renderQueueList(); // to apply active class
             
-            if (data.success) {
-                renderResults(data);
-                // Save to history
-                saveToHistory(data);
+            if (firstProcessedItem.status === 'completed') {
+                renderResults(firstProcessedItem.result, firstProcessedItem.name);
             } else {
-                showErrorState(data.error);
+                showErrorState(firstProcessedItem.result.error);
             }
-        })
-        .catch(err => {
-            resultsLoading.style.display = "none";
-            showErrorState(err.message || "An unexpected network error occurred.");
-        });
+        } else {
+            resultsEmpty.style.display = "flex";
+            const emptyTitle = resultsEmpty.querySelector("p");
+            const emptyDesc = resultsEmpty.querySelector("span");
+            emptyTitle.innerText = "Batch Processing Failed";
+            emptyDesc.innerText = "All uploaded scans failed DL analysis. Please check your PHP server connection.";
+        }
+        
+        loadHistoryTable();
     });
 
     // Render prediction and Grad-CAM outputs
-    function renderResults(data) {
+    function renderResults(data, filename) {
         resultsEmpty.style.display = "none";
         resultsLoading.style.display = "none";
         resultsContent.style.display = "block";
+        
+        // Display custom filename in details pane
+        inspectedFileName.innerText = filename;
         
         // Handle warning (e.g. model not trained)
         if (data.warning || !data.model_trained) {
@@ -230,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const confidencePct = (data.confidence * 100).toFixed(1) + "%";
         
         predClassBadge.innerText = predClass.replace("_", " ");
-        predClassBadge.className = "result-badge " + predClass; // for theme coloring if needed
+        predClassBadge.className = "result-badge " + predClass; // for color theme styles
         predConfVal.innerText = confidencePct;
         
         // Dynamic color changes for badge matching tumor class
@@ -253,7 +479,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const row = document.createElement("div");
             row.className = "prob-row";
             
-            // Human readable name mapping
             let displayName = clsName.replace("_", " ");
             if (clsName === "notumor") displayName = "No Tumor";
             
@@ -268,7 +493,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         
         // Set raw image and Grad-CAM overlay image paths
-        // Prefix with "../" to point to root backend/uploads/ relative to frontend/
         resultRawImg.src = "../" + data.raw_image_url;
         resultHeatmapImg.src = "../" + data.heatmap_image_url;
         
@@ -276,7 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderFindingsNarrative(predClass, confidencePct);
     }
     
-    // Helper to display error messages in the output panel
+    // Display error messages in the output panel
     function showErrorState(errorMsg) {
         resultsEmpty.style.display = "flex";
         resultsContent.style.display = "none";
@@ -306,7 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 break;
             case "pituitary":
                 title = "Sellar/Sella Turcica Pituitary Expansion Detected";
-                desc = `A <strong>Pituitary Tumor</strong> has been classified with ${confidencePct} confidence. The Grad-CAM focuses on the basal/infundibular region of the sella turcica. Pituitary adenomas can cause hormonal imbalances and optic chiasm compression (leading to bitemporal hemianopsia). Further T1-coronal imaging and endocrine hormone screening panel tests are standard clinical procedures.`;
+                desc = `A <strong>Pituitary Tumor</strong> has been classified with ${confidencePct} confidence. The Grad-CAM focuses on the basal/infundibular region of the sella turcica. Pituitary adenomas can cause hormonal imbalances and optic chiasm compression. Further T1-coronal imaging and endocrine hormone screening panel tests are standard clinical procedures.`;
                 break;
             default: // notumor
                 title = "No Abnormal Brain Mass/Lesion Detected";
@@ -319,39 +543,35 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // 5. Check model training status on server startup
+    // Check model training status on server startup
     function checkModelStatus() {
         // We ping backend with empty request to check if custom best_model.pth is present
         fetch("../backend/upload.php", {
             method: "POST"
         })
         .then(response => response.json())
+        .catch(() => {
+            // Silence connection errors on status badges
+        })
         .then(data => {
-            // Note: Since we didn't upload a file, it will return an error, but it contains model_trained in warning checks or we can read status.
-            // Let's call evaluate.py status if possible, or just see if file exists.
-            // A simpler way: we write a check endpoint. But checking upload.php error response works since it has the model load warnings!
-            if (data.error && data.error.includes("No image file")) {
-                // If model warning does not exist in backend check, it means custom weights are loaded
-                // Let's check model file existence directly via a small endpoint check or reading.
-                // We'll write status badge. Let's make it friendly:
+            if (data && data.error && data.error.includes("No image file")) {
                 modelStatusText.innerText = "Model Ready (PyTorch)";
                 const indicator = document.querySelector(".status-indicator");
                 indicator.className = "status-indicator connected";
+            } else {
+                modelStatusText.innerText = "Demo Mode (Local)";
+                const indicator = document.querySelector(".status-indicator");
+                indicator.className = "status-indicator";
             }
-        })
-        .catch(() => {
-            modelStatusText.innerText = "Demo Mode (Local)";
-            const indicator = document.querySelector(".status-indicator");
-            indicator.className = "status-indicator";
         });
     }
 
-    // 6. Local Storage History Management
-    function saveToHistory(data) {
+    // Local Storage History Management
+    function saveToHistory(data, name) {
         const historyItem = {
             id: Date.now(),
             timestamp: new Date().toLocaleString(),
-            filename: selectedFile ? selectedFile.name : selectedSamplePath.split("/").pop(),
+            filename: name,
             prediction: data.prediction,
             confidence: data.confidence,
             probabilities: data.probabilities,
@@ -361,15 +581,12 @@ document.addEventListener("DOMContentLoaded", () => {
             warning: data.warning || null
         };
         
-        scanHistory.unshift(historyItem); // Add to beginning of array
-        
-        // Limit history to 20 items
-        if (scanHistory.length > 20) {
+        scanHistory.unshift(historyItem);
+        if (scanHistory.length > 30) {
             scanHistory.pop();
         }
         
         localStorage.setItem("neuro_scan_history", JSON.stringify(scanHistory));
-        loadHistoryTable();
     }
     
     function loadHistoryTable() {
@@ -387,7 +604,6 @@ document.addEventListener("DOMContentLoaded", () => {
         scanHistory.forEach((item, index) => {
             const tr = document.createElement("tr");
             
-            // Format class output
             let classDisplay = item.prediction.replace("_", " ");
             if (item.prediction === "notumor") classDisplay = "No Tumor";
             
@@ -413,6 +629,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const idx = parseInt(btn.getAttribute("data-index"));
                 const historicalData = scanHistory[idx];
                 
+                // Clear any current queue to avoid UI confusion
+                resetQueue();
+                
                 // Load results back into the analyzer view
                 renderResults({
                     success: true,
@@ -423,13 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     heatmap_image_url: historicalData.heatmap_image_url,
                     model_trained: historicalData.model_trained,
                     warning: historicalData.warning
-                });
-                
-                // Show uploaded preview image
-                previewImg.src = "../" + historicalData.raw_image_url;
-                uploadPrompt.style.display = "none";
-                uploadPreview.style.display = "block";
-                analyzeBtn.disabled = false;
+                }, historicalData.filename);
                 
                 // Navigate back to analyzer tab
                 document.getElementById("nav-analyzer").click();

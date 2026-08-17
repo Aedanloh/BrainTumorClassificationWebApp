@@ -73,43 +73,74 @@
                 
                 <!-- SECTION 1: MRI Analyzer -->
                 <section id="analyzer-section" class="content-section active">
+                    <!-- Batch Processing Stats Banner (Only visible when batch mode is active) -->
+                    <div class="batch-stats-banner" id="batch-stats-banner" style="display: none;">
+                        <div class="batch-stat-item">
+                            <span class="batch-label">Total Selected</span>
+                            <span class="batch-value" id="batch-total-cnt">0</span>
+                        </div>
+                        <div class="batch-stat-item">
+                            <span class="batch-label">Processed</span>
+                            <span class="batch-value" id="batch-processed-cnt">0</span>
+                        </div>
+                        <div class="batch-stat-item">
+                            <span class="batch-label">Glioma</span>
+                            <span class="batch-value glioma" id="batch-glioma-cnt">0</span>
+                        </div>
+                        <div class="batch-stat-item">
+                            <span class="batch-label">Meningioma</span>
+                            <span class="batch-value meningioma" id="batch-meningioma-cnt">0</span>
+                        </div>
+                        <div class="batch-stat-item">
+                            <span class="batch-label">Pituitary</span>
+                            <span class="batch-value pituitary" id="batch-pituitary-cnt">0</span>
+                        </div>
+                        <div class="batch-stat-item">
+                            <span class="batch-label">No Tumor</span>
+                            <span class="batch-value normal" id="batch-notumor-cnt">0</span>
+                        </div>
+                    </div>
+
                     <div class="grid-layout">
-                        <!-- Left Panel: Upload Image -->
+                        <!-- Left Panel: Upload Image & Batch Queue -->
                         <div class="card upload-card">
                             <div class="card-header">
-                                <h3><i class="fa-solid fa-upload"></i> Upload MRI Scan</h3>
-                                <p>Select or drag a T1-weighted contrast-enhanced brain MRI scan (JPEG or PNG format).</p>
+                                <h3><i class="fa-solid fa-upload"></i> Upload MRI Scans</h3>
+                                <p>Select or drag one or more T1-weighted contrast-enhanced brain MRI scans.</p>
                             </div>
                             
-                            <!-- Drag & Drop Upload Zone -->
+                            <!-- Drag & Drop Upload Zone (Multiple files allowed) -->
                             <div class="upload-zone" id="drop-zone">
-                                <input type="file" id="file-input" accept="image/jpeg, image/png" style="display: none;">
-                                <div class="upload-prompt">
+                                <input type="file" id="file-input" accept="image/jpeg, image/png" multiple style="display: none;">
+                                <div class="upload-prompt" id="upload-prompt">
                                     <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-                                    <p class="main-prompt">Drag & drop your MRI scan here</p>
+                                    <p class="main-prompt">Drag & drop MRI scans here</p>
                                     <p class="sub-prompt">or <span class="browse-btn">browse files</span></p>
-                                    <span class="file-limits">Supported formats: JPG, JPEG, PNG (Max 5MB)</span>
+                                    <span class="file-limits">Supported formats: JPG, JPEG, PNG (Select multiple)</span>
                                 </div>
-                                <div class="upload-preview" id="upload-preview" style="display: none;">
-                                    <img id="preview-img" src="" alt="MRI Preview">
-                                    <div class="preview-overlay">
-                                        <button class="btn btn-secondary btn-sm" id="change-file-btn">
-                                            <i class="fa-solid fa-rotate"></i> Change Scan
-                                        </button>
-                                    </div>
+                            </div>
+                            
+                            <!-- Batch Queue List (Visible when files are added) -->
+                            <div class="batch-queue-container" id="batch-queue-container" style="display: none;">
+                                <div class="queue-header">
+                                    <h4>Scans Queue (<span id="queue-count">0</span> files)</h4>
+                                    <button class="clear-queue-btn" id="clear-queue-btn"><i class="fa-solid fa-trash-can"></i> Clear</button>
+                                </div>
+                                <div class="queue-list" id="queue-list">
+                                    <!-- Dynamic rows go here -->
                                 </div>
                             </div>
                             
                             <!-- Actions -->
                             <div class="action-bar">
                                 <button class="btn btn-primary btn-block" id="analyze-btn" disabled>
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Run Deep Learning Analysis
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Run Batch DL Analysis
                                 </button>
                             </div>
                             
                             <!-- Sample Scans Section -->
                             <div class="sample-scans">
-                                <h4>Or test with a sample scan:</h4>
+                                <h4>Or test with sample scans (select one or multiple):</h4>
                                 <div class="sample-grid">
                                     <div class="sample-item" data-type="glioma" data-file="dataset/Testing/glioma/Te-gl_10.jpg">
                                         <i class="fa-solid fa-brain sample-thumb-icon"></i>
@@ -136,7 +167,7 @@
                         <div class="card results-card">
                             <div class="card-header">
                                 <h3><i class="fa-solid fa-chart-pie"></i> Diagnostic Output</h3>
-                                <p>Classification prediction and explainability heatmap will appear here.</p>
+                                <p>Select an analyzed file from the queue on the left to display its detailed prediction and explainability heatmap.</p>
                             </div>
                             
                             <!-- Empty State -->
@@ -144,15 +175,15 @@
                                 <div class="empty-animation">
                                     <i class="fa-solid fa-stethoscope"></i>
                                 </div>
-                                <p>Awaiting MRI Scan Upload...</p>
-                                <span>Please upload or drag an MRI scan on the left and click "Run Deep Learning Analysis".</span>
+                                <p>Awaiting MRI Scans Upload...</p>
+                                <span>Please upload MRI scans or select sample scans on the left, then click "Run Batch DL Analysis".</span>
                             </div>
                             
                             <!-- Loading State -->
                             <div class="results-loading" id="results-loading" style="display: none;">
                                 <div class="spinner"></div>
-                                <p>Running Deep CNN Inference...</p>
-                                <span>Analyzing image layers & extracting Grad-CAM gradients...</span>
+                                <p id="loading-title">Running Deep CNN Inference...</p>
+                                <span id="loading-subtitle">Analyzing image layers & extracting Grad-CAM gradients...</span>
                             </div>
 
                             <!-- Results Content (Hidden by Default) -->
@@ -161,6 +192,11 @@
                                 <div class="warning-banner" id="model-warning-banner" style="display: none;">
                                     <i class="fa-solid fa-triangle-exclamation"></i>
                                     <span id="warning-text">Model weights not trained. Running on untrained/ImageNet base model.</span>
+                                </div>
+
+                                <div class="active-file-header">
+                                    <span class="active-file-label">Inspecting:</span>
+                                    <span class="active-file-name" id="inspected-file-name">filename.jpg</span>
                                 </div>
 
                                 <div class="primary-result">
@@ -281,7 +317,7 @@
                                 <h4>Anatomical Location</h4>
                                 <p>Located inside the sella turcica, directly below the optic chiasm at the base of the skull.</p>
                                 <h4>MRI Characteristics</h4>
-                                <p>Microadenomas (<10mm) appear as hypointense lesions on T1 post-contrast compared to normal pituitary tissue. Macroadenomas (>10mm) may expand the sella and display a classic "snowman" configuration.</p>
+                                <p>Microadenomas (&lt;10mm) appear as hypointense lesions on T1 post-contrast compared to normal pituitary tissue. Macroadenomas (&gt;10mm) may expand the sella and display a classic "snowman" configuration.</p>
                             </div>
                         </div>
                         

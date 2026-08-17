@@ -272,6 +272,51 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Batch Processing Stats Banner */
+.batch-stats-banner {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    background-color: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.batch-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--slate-200);
+}
+
+.batch-stat-item:last-child {
+    border-right: none;
+}
+
+.batch-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--slate-600);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.batch-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--slate-900);
+}
+
+.batch-value.glioma { color: hsl(200, 85%, 45%); }
+.batch-value.meningioma { color: hsl(280, 75%, 50%); }
+.batch-value.pituitary { color: hsl(340, 80%, 50%); }
+.batch-value.normal { color: var(--success); }
+
 /* Grid Layout for Analyzer */
 .grid-layout {
     display: grid;
@@ -316,12 +361,12 @@ html, body {
 
 /* Upload Zone styling */
 .upload-zone {
-    margin: 24px;
+    margin: 24px 24px 16px;
     border: 2px dashed var(--slate-300);
     border-radius: 10px;
     background-color: var(--slate-50);
     cursor: pointer;
-    min-height: 220px;
+    min-height: 140px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -334,7 +379,7 @@ html, body {
 }
 
 .upload-prompt {
-    padding: 32px;
+    padding: 20px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -342,9 +387,9 @@ html, body {
 }
 
 .upload-icon {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     color: var(--slate-600);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     transition: transform 0.2s ease;
 }
 
@@ -354,13 +399,13 @@ html, body {
 }
 
 .main-prompt {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--slate-900);
 }
 
 .sub-prompt {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--slate-600);
     margin-top: 2px;
 }
@@ -372,32 +417,133 @@ html, body {
 }
 
 .file-limits {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--slate-600);
-    margin-top: 12px;
+    margin-top: 8px;
 }
 
-.upload-preview {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    padding: 12px;
-}
-
-.upload-preview img {
-    width: 100%;
-    height: 180px;
-    object-fit: contain;
+/* Batch Queue container styles */
+.batch-queue-container {
+    margin: 0 24px 16px;
+    border: 1px solid var(--slate-200);
     border-radius: 8px;
-    background-color: var(--slate-900);
-    display: block;
+    overflow: hidden;
 }
 
-.preview-overlay {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+.queue-header {
+    background-color: var(--slate-50);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--slate-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.queue-header h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--slate-900);
+}
+
+.clear-queue-btn {
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.clear-queue-btn:hover {
+    text-decoration: underline;
+}
+
+.queue-list {
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: white;
+}
+
+.queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--slate-100);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.queue-item:last-child {
+    border-bottom: none;
+}
+
+.queue-item:hover {
+    background-color: var(--slate-50);
+}
+
+.queue-item.active {
+    background-color: var(--primary-light);
+    border-left: 3px solid var(--primary);
+}
+
+.queue-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 65%;
+}
+
+.queue-item-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--slate-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-item-status {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--slate-600);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.queue-item-status.pending { color: var(--slate-600); }
+.queue-item-status.analyzing { color: var(--primary); }
+.queue-item-status.completed { color: var(--success); }
+.queue-item-status.failed { color: var(--danger); }
+
+.queue-item-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.queue-item-badge.glioma { background-color: hsl(200, 85%, 93%); color: hsl(200, 90%, 35%); }
+.queue-item-badge.meningioma { background-color: hsl(280, 75%, 93%); color: hsl(280, 80%, 40%); }
+.queue-item-badge.pituitary { background-color: hsl(340, 80%, 93%); color: hsl(340, 85%, 40%); }
+.queue-item-badge.notumor { background-color: var(--success-light); color: var(--success); }
+
+.queue-item-remove {
+    background: none;
+    border: none;
+    color: var(--slate-600);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 0.8rem;
+}
+
+.queue-item-remove:hover {
+    color: var(--danger);
 }
 
 .action-bar {
@@ -444,12 +590,19 @@ html, body {
     color: var(--primary);
 }
 
+.sample-item.active {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+}
+
 .sample-thumb-icon {
     font-size: 0.85rem;
     color: var(--slate-600);
 }
 
-.sample-item:hover .sample-thumb-icon {
+.sample-item:hover .sample-thumb-icon, .sample-item.active .sample-thumb-icon {
     color: var(--primary);
 }
 
@@ -571,6 +724,7 @@ html, body {
 /* Results Display Area styling */
 .results-content {
     padding: 24px;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 .warning-banner {
@@ -589,6 +743,29 @@ html, body {
 
 .warning-banner i {
     font-size: 0.95rem;
+}
+
+.active-file-header {
+    background-color: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.active-file-label {
+    font-weight: 700;
+    color: var(--slate-600);
+}
+
+.active-file-name {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--slate-900);
 }
 
 .primary-result {
