@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Project specific exclusions
+dataset/
+backend/uploads/
+models/best_model.pth
+models/classes.txt
+models/training_curves.png
