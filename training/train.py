@@ -39,8 +39,8 @@ def train_model(data_dir="dataset", num_epochs=10, batch_size=32, lr=0.0001, dev
     train_dataset = datasets.ImageFolder(train_dir, transform=train_transforms)
     test_dataset = datasets.ImageFolder(test_dir, transform=test_transforms)
     
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True if torch.cuda.is_available() else False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True if torch.cuda.is_available() else False)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True if torch.cuda.is_available() else False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True if torch.cuda.is_available() else False)
     
     class_names = train_dataset.classes
     num_classes = len(class_names)
