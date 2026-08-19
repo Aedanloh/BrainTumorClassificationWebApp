@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const sampleItems = document.querySelectorAll(".sample-item");
         
         // App State
-        let uploadQueue = []; // Array of { id, file, name, size, type, samplePath, status: 'pending'|'analyzing'|'completed'|'failed', result: null|data }
+        let uploadQueue = []; // Array of { id, file, name, size, type, samplePath, status: 'pending'|'analyzing'|'completed'|'failed', selected: true/false, result: null|data }
         let scanHistory = JSON.parse(localStorage.getItem("neuro_scan_history") || "[]");
         let activeInspectedItemId = null;
         let isAnalyzing = false;
@@ -221,8 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
             let isDragging = false;
             let previousMousePosition = { x: 0, y: 0 };
             
-            const mainContentEl = document.querySelector(".ehr-content");
-            
             container.addEventListener('mousedown', (e) => {
                 isDragging = true;
                 previousMousePosition = { x: e.clientX, y: e.clientY };
@@ -297,7 +295,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
                 const activeColor = colors[predClass] || colors['default'];
                 
-                // Animate color transition
                 pointMaterial.color.setHex(activeColor);
                 lineMaterial.color.setHex(activeColor);
             };
@@ -412,6 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     size: file.size,
                     samplePath: null,
                     status: 'pending',
+                    selected: true,
                     result: null
                 };
                 
@@ -459,6 +457,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         size: 0,
                         samplePath: fileUrl,
                         status: 'pending',
+                        selected: true,
                         result: null
                     };
                     uploadQueue.push(queueItem);
@@ -469,7 +468,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
-        // 4. Render the Queue List UI
+        // 4. Update the Batch Analyze Button Text based on Checkboxes
+        function updateAnalyzeButtonText() {
+            const selectedCount = uploadQueue.filter(q => q.selected && q.status === 'pending').length;
+            if (selectedCount === 0) {
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Run Deep Learning Inference`;
+            } else {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Run Inference on ${selectedCount} selected scan${selectedCount > 1 ? 's' : ''}`;
+            }
+        }
+
+        // 5. Render the Queue List UI (With Checkboxes & Play buttons)
         function renderQueueList() {
             if (uploadQueue.length === 0) {
                 batchQueueContainer.style.display = "none";
@@ -479,7 +490,6 @@ document.addEventListener("DOMContentLoaded", () => {
             
             batchQueueContainer.style.display = "block";
             queueCountText.innerText = uploadQueue.length;
-            analyzeBtn.disabled = false;
             
             queueList.innerHTML = "";
             
@@ -512,20 +522,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 
                 div.innerHTML = `
-                    <div class="queue-item-info">
-                        <span class="queue-item-name" title="${item.name}">${item.name}</span>
-                        <span class="queue-item-status ${statusClass}">
-                            ${iconHtml} ${statusText}
-                        </span>
+                    <div style="display: flex; align-items: center; gap: 10px; width: 62%;">
+                        <input type="checkbox" class="queue-item-checkbox" data-id="${item.id}" ${item.selected ? 'checked' : ''} ${isAnalyzing ? 'disabled' : ''}>
+                        <div class="queue-item-info" style="width: calc(100% - 25px);">
+                            <span class="queue-item-name" title="${item.name}">${item.name}</span>
+                            <span class="queue-item-status ${statusClass}">
+                                ${iconHtml} ${statusText}
+                            </span>
+                        </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         ${badgeHtml}
+                        ${item.status === 'pending' ? `
+                            <button class="queue-item-run-btn" data-id="${item.id}" ${isAnalyzing ? 'disabled style="opacity: 0.3;"' : ''} title="Run individual scan">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                        ` : ''}
                         <button class="queue-item-remove" data-id="${item.id}" ${isAnalyzing ? 'disabled style="opacity: 0.3;"' : ''}>
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
                 `;
                 
+                // Active file click
                 div.addEventListener("click", () => {
                     if (item.status === 'completed') {
                         activeInspectedItemId = item.id;
@@ -540,9 +559,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
                 
+                // Select checkbox events
+                const checkbox = div.querySelector(".queue-item-checkbox");
+                checkbox.addEventListener("click", (e) => e.stopPropagation());
+                checkbox.addEventListener("change", (e) => {
+                    item.selected = checkbox.checked;
+                    updateAnalyzeButtonText();
+                });
+                
+                // Run individual scan events
+                const runBtn = div.querySelector(".queue-item-run-btn");
+                if (runBtn) {
+                    runBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (isAnalyzing) return;
+                        runIndividualScan(item.id);
+                    });
+                }
+                
                 queueList.appendChild(div);
             });
             
+            // Item delete events
             document.querySelectorAll(".queue-item-remove").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     e.stopPropagation();
@@ -569,9 +607,75 @@ document.addEventListener("DOMContentLoaded", () => {
                     renderQueueList();
                 });
             });
+
+            updateAnalyzeButtonText();
         }
 
-        // 5. Pause & Cancel Scanning Controllers
+        // 6. Run Individual Scan Immediately
+        async function runIndividualScan(itemId) {
+            const item = uploadQueue.find(q => q.id === itemId);
+            if (!item || isAnalyzing) return;
+
+            isAnalyzing = true;
+            analyzeBtn.disabled = true;
+            clearQueueBtn.disabled = true;
+
+            item.status = 'analyzing';
+            renderQueueList();
+
+            resultsEmpty.style.display = "none";
+            resultsContent.style.display = "none";
+            resultsLoading.style.display = "flex";
+            loadingTitle.innerText = "Analyzing Target Scan";
+            loadingSubtitle.innerText = `Running model inference: ${item.name}`;
+            hudPrediction.style.display = "none";
+            if (update3DBrainColor) update3DBrainColor('default');
+
+            const formData = new FormData();
+            if (item.samplePath) {
+                formData.append("sample_path", item.samplePath);
+            } else {
+                formData.append("mri_image", item.file);
+            }
+
+            try {
+                const response = await fetch("../backend/upload.php", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error("HTTP connection error.");
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    item.status = 'completed';
+                    item.result = data;
+                    
+                    saveToHistory(data, item.name);
+                    activeInspectedItemId = item.id;
+                    renderQueueList();
+                    renderResults(data, item.name);
+                } else {
+                    item.status = 'failed';
+                    item.result = { error: data.error };
+                    renderQueueList();
+                    showErrorState(data.error);
+                }
+            } catch (err) {
+                item.status = 'failed';
+                item.result = { error: err.message || "Network request failed." };
+                renderQueueList();
+                showErrorState(err.message || "Network request failed.");
+            }
+
+            isAnalyzing = false;
+            clearQueueBtn.disabled = false;
+            loadHistoryTable();
+            renderQueueList();
+        }
+
+        // 7. Pause & Cancel Checking state
         pauseBtn.addEventListener("click", () => {
             isScanningPaused = !isScanningPaused;
             if (isScanningPaused) {
@@ -605,9 +709,10 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 6. Run Batch DL Analysis sequentially
+        // 8. Run Batch DL Analysis for selected items sequentially
         analyzeBtn.addEventListener("click", async () => {
-            if (uploadQueue.length === 0 || isAnalyzing) return;
+            const selectedItems = uploadQueue.filter(q => q.selected && q.status === 'pending');
+            if (selectedItems.length === 0 || isAnalyzing) return;
             
             isAnalyzing = true;
             isScanningPaused = false;
@@ -624,7 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Setup stats banner
             batchStatsBanner.style.display = "grid";
-            batchTotalCnt.innerText = uploadQueue.length;
+            batchTotalCnt.innerText = selectedItems.length;
             batchProcessedCnt.innerText = "0";
             batchGliomaCnt.innerText = "0";
             batchMeningiomaCnt.innerText = "0";
@@ -643,8 +748,8 @@ document.addEventListener("DOMContentLoaded", () => {
             let pituitaryCount = 0;
             let notumorCount = 0;
             
-            for (let i = 0; i < uploadQueue.length; i++) {
-                const item = uploadQueue[i];
+            for (let i = 0; i < selectedItems.length; i++) {
+                const item = selectedItems[i];
                 
                 if (isScanningCancelled) break;
                 if (isScanningPaused) await checkScanPauseState();
@@ -653,7 +758,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.status = 'analyzing';
                 renderQueueList();
                 
-                loadingTitle.innerText = `Processing Scan ${i + 1} of ${uploadQueue.length}`;
+                loadingTitle.innerText = `Processing Scan ${i + 1} of ${selectedItems.length}`;
                 loadingSubtitle.innerText = `Analyzing: ${item.name}...`;
                 
                 const formData = new FormData();
@@ -716,7 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resultsLoading.style.display = "none";
             
             if (isScanningCancelled) {
-                uploadQueue.forEach(q => {
+                selectedItems.forEach(q => {
                     if (q.status === 'analyzing' || q.status === 'pending') {
                         q.status = 'pending';
                     }
@@ -727,9 +832,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const emptyTitle = resultsEmpty.querySelector("p");
                 const emptyDesc = resultsEmpty.querySelector("span");
                 emptyTitle.innerText = "Batch Scan Cancelled";
-                emptyDesc.innerText = `Scanning was cancelled. ${processedCount} of ${uploadQueue.length} files completed analysis.`;
+                emptyDesc.innerText = `Scanning was cancelled. ${processedCount} of ${selectedItems.length} selected files completed analysis.`;
             } else {
-                const firstProcessedItem = uploadQueue.find(q => q.status === 'completed' || q.status === 'failed');
+                const firstProcessedItem = selectedItems.find(q => q.status === 'completed' || q.status === 'failed');
                 if (firstProcessedItem) {
                     activeInspectedItemId = firstProcessedItem.id;
                     renderQueueList();
@@ -789,7 +894,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (predClass === "notumor") displayClassHUD = "No Tumor";
             hudPredClass.innerText = `${displayClassHUD} (${confidencePct})`;
             
-            // Update the 3D Brain model color code in real time! (holographic glowing feedback)
+            // Update the 3D Brain model color code in real time!
             if (update3DBrainColor) {
                 update3DBrainColor(predClass);
             }
