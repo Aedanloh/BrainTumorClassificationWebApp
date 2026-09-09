@@ -111,13 +111,8 @@ def main():
     # Set device (CPU for inference is fast enough and reliable for CLI call)
     device = torch.device("cpu")
     
-    # Initialize model skeleton
-    try:
-        from torchvision.models import ResNet18_Weights
-        model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-    except ImportError:
-        model = models.resnet18(pretrained=True)
-        
+    # Initialize model skeleton without downloading external weights
+    model = models.resnet18(weights=None)
     num_features = model.fc.in_features
     model.fc = nn.Linear(num_features, len(classes))
     model = model.to(device)
@@ -131,9 +126,9 @@ def main():
             model.load_state_dict(torch.load(model_path, map_location=device))
             model_loaded = True
         except Exception as e:
-            warning_msg = f"Failed to load weights: {str(e)}. Running with pre-trained initialization."
+            warning_msg = f"Failed to load weights: {str(e)}."
     else:
-        warning_msg = f"Weights file '{model_path}' not found. Model has NOT been trained yet. Running with default ImageNet initialized weights."
+        warning_msg = f"Weights file '{model_path}' not found. Model has NOT been trained yet."
         
     model.eval()
     

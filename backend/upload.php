@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Enable session security check
 header('Content-Type: application/json');
@@ -13,6 +15,8 @@ if (!isset($_SESSION['doctor_id'])) {
 
 // Enable error reporting for debugging, but we will catch errors and format as JSON
 ini_set('display_errors', 0);
+ini_set('max_execution_time', '300');
+set_time_limit(300);
 error_reporting(E_ALL);
 
 // Set directory paths
@@ -109,30 +113,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sample_path'])) {
 $heatmap_filename = 'heatmap_' . basename($raw_filepath);
 $heatmap_filepath = $upload_dir . '/' . $heatmap_filename;
 
-// Prepare commands for running python model script
-$py_script = escapeshellarg($base_dir . '/backend/predict.py');
-$arg_raw_img = escapeshellarg($raw_filepath);
-$arg_heatmap = escapeshellarg($heatmap_filepath);
-$model_path = escapeshellarg($base_dir . '/models/best_model.pth');
+// Find python binary
+$python_bin = 'python';
+$known_python_paths = [
+    'C:\\Users\\Aedan Loh\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
+    'C:\\Program Files\\Python312\\python.exe',
+    'C:\\Program Files\\Python311\\python.exe'
+];
+foreach ($known_python_paths as $p) {
+    if (file_exists($p)) {
+        $python_bin = $p;
+        break;
+    }
+}
 
-$command = "py $py_script $arg_raw_img $arg_heatmap $model_path 2>&1";
+$py_script = $base_dir . '/backend/predict.py';
+$model_path = $base_dir . '/models/best_model.pth';
 
-// Execute command
-$output = shell_exec($command);
+$cmd = '"' . $python_bin . '" "' . $py_script . '" "' . $raw_filepath . '" "' . $heatmap_filepath . '" "' . $model_path . '"';
 
-// Logging if output is empty
-if ($output === null) {
-    $response['error'] = 'Failed to execute Python prediction process.';
+// Execute via proc_open to avoid Windows cmd.exe hanging issues
+$descriptorspec = [
+    0 => ["pipe", "r"], // stdin
+    1 => ["pipe", "w"], // stdout
+    2 => ["pipe", "w"]  // stderr
+];
+
+$process = proc_open($cmd, $descriptorspec, $pipes);
+$output = '';
+$stderr_output = '';
+
+if (is_resource($process)) {
+    fclose($pipes[0]);
+    $output = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr_output = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit_code = proc_close($process);
+} else {
+    $response['error'] = 'Failed to spawn Python prediction process.';
+    echo json_encode($response);
+    exit;
+}
+
+// Check for empty output
+if (empty(trim($output))) {
+    $response['error'] = 'Python process produced no output. Stderr: ' . trim($stderr_output);
     echo json_encode($response);
     exit;
 }
 
 // Try to parse the python JSON output
-$json_output = json_decode($output, true);
+$json_output = json_decode(trim($output), true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
-    // If output is not valid JSON, we have a python traceback or standard output crash
-    $response['error'] = 'Python process failed. Output: ' . trim($output);
+    $response['error'] = 'Python process failed. Output: ' . trim($output) . ' | Stderr: ' . trim($stderr_output);
     echo json_encode($response);
     exit;
 }

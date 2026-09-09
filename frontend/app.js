@@ -644,7 +644,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: formData
                 });
                 
-                if (!response.ok) throw new Error("HTTP connection error.");
+                if (!response.ok) {
+                    const errText = await response.text();
+                    let errMsg = "HTTP error (" + response.status + ")";
+                    try {
+                        const errJson = JSON.parse(errText);
+                        if (errJson.error) errMsg = errJson.error;
+                    } catch (_) {
+                        if (errText) errMsg += ": " + errText.substring(0, 150);
+                    }
+                    throw new Error(errMsg);
+                }
                 
                 const data = await response.json();
                 
@@ -775,7 +785,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     
                     if (!response.ok) {
-                        throw new Error("HTTP connection error.");
+                        const errText = await response.text();
+                        let errMsg = "HTTP error (" + response.status + ")";
+                        try {
+                            const errJson = JSON.parse(errText);
+                            if (errJson.error) errMsg = errJson.error;
+                        } catch (_) {
+                            if (errText) errMsg += ": " + errText.substring(0, 150);
+                        }
+                        throw new Error(errMsg);
                     }
                     
                     const data = await response.json();
