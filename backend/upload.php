@@ -113,63 +113,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sample_path'])) {
 $heatmap_filename = 'heatmap_' . basename($raw_filepath);
 $heatmap_filepath = $upload_dir . '/' . $heatmap_filename;
 
-// Find python binary
-$python_bin = 'python';
-$known_python_paths = [
-    'C:\\Users\\Aedan Loh\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
-    'C:\\Program Files\\Python312\\python.exe',
-    'C:\\Program Files\\Python311\\python.exe'
-];
-foreach ($known_python_paths as $p) {
-    if (file_exists($p)) {
-        $python_bin = $p;
-        break;
+// Step 1: Attempt ultra-fast in-memory inference server (0.05s-0.2s response time)
+$fast_infer_url = 'http://127.0.0.1:5005/predict';
+$post_payload = json_encode([
+    'raw_filepath' => $raw_filepath,
+    'heatmap_filepath' => $heatmap_filepath
+]);
+
+$fast_output = false;
+if (function_exists('curl_init')) {
+    $ch = curl_init($fast_infer_url);
+    if ($ch) {
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
+        $res = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($code === 200 && $res !== false) {
+            $fast_output = $res;
+        }
     }
 }
 
-$py_script = $base_dir . '/backend/predict.py';
-$model_path = $base_dir . '/models/best_model.pth';
-
-$cmd = '"' . $python_bin . '" "' . $py_script . '" "' . $raw_filepath . '" "' . $heatmap_filepath . '" "' . $model_path . '"';
-
-// Execute via proc_open to avoid Windows cmd.exe hanging issues
-$descriptorspec = [
-    0 => ["pipe", "r"], // stdin
-    1 => ["pipe", "w"], // stdout
-    2 => ["pipe", "w"]  // stderr
-];
-
-$process = proc_open($cmd, $descriptorspec, $pipes);
-$output = '';
-$stderr_output = '';
-
-if (is_resource($process)) {
-    fclose($pipes[0]);
-    $output = stream_get_contents($pipes[1]);
-    fclose($pipes[1]);
-    $stderr_output = stream_get_contents($pipes[2]);
-    fclose($pipes[2]);
-    $exit_code = proc_close($process);
-} else {
-    $response['error'] = 'Failed to spawn Python prediction process.';
-    echo json_encode($response);
-    exit;
+$json_output = null;
+if ($fast_output !== false && !empty(trim($fast_output))) {
+    $parsed = json_decode(trim($fast_output), true);
+    if ($parsed && isset($parsed['success']) && $parsed['success']) {
+        $json_output = $parsed;
+    }
 }
 
-// Check for empty output
-if (empty(trim($output))) {
-    $response['error'] = 'Python process produced no output. Stderr: ' . trim($stderr_output);
-    echo json_encode($response);
-    exit;
-}
+// Step 2: Graceful fallback to CLI proc_open if warm server is offline
+if (!$json_output) {
+    // Find python binary
+    $python_bin = 'python';
+    $known_python_paths = [
+        'C:\\Users\\Aedan Loh\\AppData\\Local\\Programs\\Python\\Python312\\python.exe',
+        'C:\\Program Files\\Python312\\python.exe',
+        'C:\\Program Files\\Python311\\python.exe'
+    ];
+    foreach ($known_python_paths as $p) {
+        if (file_exists($p)) {
+            $python_bin = $p;
+            break;
+        }
+    }
 
-// Try to parse the python JSON output
-$json_output = json_decode(trim($output), true);
+    $py_script = $base_dir . '/backend/predict.py';
+    $model_path = $base_dir . '/models/best_model.pth';
 
-if (json_last_error() !== JSON_ERROR_NONE) {
-    $response['error'] = 'Python process failed. Output: ' . trim($output) . ' | Stderr: ' . trim($stderr_output);
-    echo json_encode($response);
-    exit;
+    $cmd = '"' . $python_bin . '" "' . $py_script . '" "' . $raw_filepath . '" "' . $heatmap_filepath . '" "' . $model_path . '"';
+
+    // Execute via proc_open to avoid Windows cmd.exe hanging issues
+    $descriptorspec = [
+        0 => ["pipe", "r"], // stdin
+        1 => ["pipe", "w"], // stdout
+        2 => ["pipe", "w"]  // stderr
+    ];
+
+    $process = proc_open($cmd, $descriptorspec, $pipes);
+    $output = '';
+    $stderr_output = '';
+
+    if (is_resource($process)) {
+        fclose($pipes[0]);
+        $output = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $stderr_output = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $exit_code = proc_close($process);
+    } else {
+        $response['error'] = 'Failed to spawn Python prediction process.';
+        echo json_encode($response);
+        exit;
+    }
+
+    // Check for empty output
+    if (empty(trim($output))) {
+        $response['error'] = 'Python process produced no output. Stderr: ' . trim($stderr_output);
+        echo json_encode($response);
+        exit;
+    }
+
+    // Try to parse the python JSON output
+    $json_output = json_decode(trim($output), true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $response['error'] = 'Python process failed. Output: ' . trim($output) . ' | Stderr: ' . trim($stderr_output);
+        echo json_encode($response);
+        exit;
+    }
 }
 
 // Check if Python returned an error
